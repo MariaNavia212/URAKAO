@@ -202,51 +202,6 @@ body {
     color: white;
 }
 
-/* ── Buscador ────────────────────────────────────────────────── */
-.buscador-wrap {
-    display: flex;
-    align-items: center;
-    margin-bottom: 1.6rem;
-    background: var(--blanco);
-    border: 1px solid var(--crema2);
-    border-left: 4px solid var(--cafe);
-    box-shadow: 0 2px 8px rgba(67,40,24,0.06);
-    transition: border-color 0.2s, box-shadow 0.2s;
-}
-
-.buscador-wrap:focus-within {
-    border-color: var(--cafe2);
-    border-left-color: var(--rojo);
-    box-shadow: 0 4px 16px rgba(67,40,24,0.10);
-}
-
-.buscador-input {
-    flex: 1;
-    padding: 0.85rem 1rem 0.85rem 1.2rem;
-    border: none;
-    background: transparent;
-    font-family: inherit;
-    font-size: 0.88rem;
-    color: var(--cafe);
-    outline: none;
-}
-
-.buscador-input::placeholder {
-    color: var(--crema2);
-    font-style: italic;
-}
-
-.buscador-resultados {
-    padding: 0 1.2rem;
-    font-size: 0.72rem;
-    color: var(--cafe2);
-    white-space: nowrap;
-    font-style: italic;
-    opacity: 0.8;
-    min-width: 80px;
-    text-align: right;
-}
-
 /* ── Grid de pedidos ─────────────────────────────────────────── */
 .pedidos-grid {
     display: grid;

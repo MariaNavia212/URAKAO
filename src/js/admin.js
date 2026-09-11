@@ -141,41 +141,12 @@ document.querySelectorAll(".filtro-btn").forEach(btn => {
         document.querySelectorAll(".filtro-btn").forEach(b => b.classList.remove("active"));
         btn.classList.add("active");
         filtroActual = btn.dataset.estado;
-        filtrarYMostrar();
+        const lista = filtroActual === "todos"
+            ? todosPedidos
+            : todosPedidos.filter(p => p.estado === filtroActual);
+        renderPedidos(lista);
     });
 });
-
-// ── Buscador ──────────────────────────────────────────────────
-document.getElementById("buscador-pedidos").addEventListener("input", filtrarYMostrar);
-
-/** Filtra pedidos por estado activo + texto del buscador y los renderiza */
-function filtrarYMostrar() {
-    const texto = document.getElementById("buscador-pedidos").value.trim().toLowerCase();
-
-    // 1. Filtrar por estado
-    let resultado = filtroActual === "todos"
-        ? todosPedidos.slice()
-        : todosPedidos.filter(p => p.estado === filtroActual);
-
-    // 2. Filtrar por texto si hay algo escrito
-    if (texto.length > 0) {
-        resultado = resultado.filter(p => {
-            const nombre   = (p.domicilio?.nombre   || "").toLowerCase();
-            const telefono = (p.domicilio?.telefono || "").toLowerCase();
-            const correo   = (p.usuarioEmail        || "").toLowerCase();
-            return nombre.includes(texto) || telefono.includes(texto) || correo.includes(texto);
-        });
-    }
-
-    // 3. Mostrar contador
-    const contador = document.getElementById("buscador-resultados");
-    contador.textContent = texto.length > 0
-        ? `${resultado.length} resultado${resultado.length !== 1 ? "s" : ""}`
-        : "";
-
-    // 4. Renderizar
-    renderPedidos(resultado);
-}
 
 function renderPedidos(lista) {
     const grid = document.getElementById("pedidos-grid");
@@ -295,7 +266,10 @@ async function cambiarEstado(id, nuevoEstado) {
         if (p) p.estado = nuevoEstado;
         actualizarStats();
         cerrarModales();
-        filtrarYMostrar();
+        const lista = filtroActual === "todos"
+            ? todosPedidos
+            : todosPedidos.filter(p => p.estado === filtroActual);
+        renderPedidos(lista);
         toast(`Estado actualizado: ${nuevoEstado}`, "ok");
     } catch (err) {
         toast("Error al cambiar estado: " + err.message, "error");
@@ -311,7 +285,10 @@ async function eliminarPedido(id) {
         todosPedidos = todosPedidos.filter(x => x.id !== id);
         actualizarStats();
         cerrarModales();
-        filtrarYMostrar();
+        const lista = filtroActual === "todos"
+            ? todosPedidos
+            : todosPedidos.filter(p => p.estado === filtroActual);
+        renderPedidos(lista);
         toast("Pedido eliminado", "ok");
     } catch (err) {
         toast("Error al eliminar: " + err.message, "error");
