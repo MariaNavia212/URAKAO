@@ -141,12 +141,43 @@ document.querySelectorAll(".filtro-btn").forEach(btn => {
         document.querySelectorAll(".filtro-btn").forEach(b => b.classList.remove("active"));
         btn.classList.add("active");
         filtroActual = btn.dataset.estado;
-        const lista = filtroActual === "todos"
-            ? todosPedidos
-            : todosPedidos.filter(p => p.estado === filtroActual);
-        renderPedidos(lista);
+        aplicarFiltrosYBusqueda();
     });
 });
+
+// Buscador
+const buscadorInput = document.getElementById("buscador-pedidos");
+
+buscadorInput.addEventListener("input", () => aplicarFiltrosYBusqueda());
+
+/** Aplica el filtro de estado y el texto de búsqueda al mismo tiempo */
+function aplicarFiltrosYBusqueda() {
+    const texto = buscadorInput.value.trim().toLowerCase();
+
+    let lista = filtroActual === "todos"
+        ? todosPedidos
+        : todosPedidos.filter(p => p.estado === filtroActual);
+
+    if (texto) {
+        lista = lista.filter(p => {
+            const nombre   = (p.domicilio?.nombre   || "").toLowerCase();
+            const telefono = (p.domicilio?.telefono || "").toLowerCase();
+            const correo   = (p.usuarioEmail        || "").toLowerCase();
+            return nombre.includes(texto) || telefono.includes(texto) || correo.includes(texto);
+        });
+    }
+
+    // Mostrar contador de resultados cuando hay búsqueda activa
+    const contador = document.getElementById("buscador-resultados");
+    if (texto) {
+        contador.textContent = `${lista.length} resultado${lista.length !== 1 ? "s" : ""}`;
+        contador.classList.remove("hidden");
+    } else {
+        contador.classList.add("hidden");
+    }
+
+    renderPedidos(lista);
+}
 
 function renderPedidos(lista) {
     const grid = document.getElementById("pedidos-grid");
@@ -266,10 +297,7 @@ async function cambiarEstado(id, nuevoEstado) {
         if (p) p.estado = nuevoEstado;
         actualizarStats();
         cerrarModales();
-        const lista = filtroActual === "todos"
-            ? todosPedidos
-            : todosPedidos.filter(p => p.estado === filtroActual);
-        renderPedidos(lista);
+        aplicarFiltrosYBusqueda();
         toast(`Estado actualizado: ${nuevoEstado}`, "ok");
     } catch (err) {
         toast("Error al cambiar estado: " + err.message, "error");
@@ -285,10 +313,7 @@ async function eliminarPedido(id) {
         todosPedidos = todosPedidos.filter(x => x.id !== id);
         actualizarStats();
         cerrarModales();
-        const lista = filtroActual === "todos"
-            ? todosPedidos
-            : todosPedidos.filter(p => p.estado === filtroActual);
-        renderPedidos(lista);
+        aplicarFiltrosYBusqueda();
         toast("Pedido eliminado", "ok");
     } catch (err) {
         toast("Error al eliminar: " + err.message, "error");
