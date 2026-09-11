@@ -1,0 +1,485 @@
+/* ============================================================
+   URAKAO — Estilos globales compartidos
+   ============================================================ */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+:root {
+    /* Paleta oficial URAKAO — Manual de Marca */
+    --cafe-oscuro:  #432818;   /* marrón principal */
+    --cafe-medio:   #5D3A1A;   /* marrón medio */
+    --crema:        #ECE8DB;   /* fondo claro */
+    --verde:        #8BA040;   /* verde oliva */
+    --rojo:         #BC4749;   /* rojo/terracota */
+
+    /* Aliases para compatibilidad con componentes existentes */
+    --ocre:         #BC4749;   /* reemplaza ocre por el rojo del manual */
+    --blanco-opaco: #F5F2EC;   /* marfil cálido */
+    --beige:        #ECE8DB;   /* crema oficial */
+}
+
+html { scroll-behavior: smooth; }
+
+body {
+    font-family: 'Georgia', serif;
+    color: var(--cafe-oscuro);
+    background-color: var(--blanco-opaco);
+    line-height: 1.6;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+}
+
+/* ── Navbar ─────────────────────────────────────────────────── */
+.navbar {
+    background-color: var(--blanco-opaco);
+    padding: 1rem 0;
+    position: fixed;
+    width: 100%;
+    top: 0;
+    z-index: 1000;
+    border-bottom: 1px solid var(--beige);
+}
+
+.navbar .container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+}
+
+.logo img {
+    height: 48px;
+    width: auto;
+    object-fit: contain;
+}
+
+.nav-links {
+    display: flex;
+    list-style: none;
+    gap: 2rem;
+}
+
+.nav-links a {
+    text-decoration: none;
+    color: var(--cafe-medio);
+    font-size: 0.9rem;
+    letter-spacing: 1px;
+    transition: color 0.3s;
+}
+
+.nav-links a:hover,
+.nav-links a.active { color: var(--ocre); }
+
+.nav-actions {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.user-greeting {
+    font-size: 0.85rem;
+    color: var(--cafe-medio);
+    font-style: italic;
+}
+
+.btn-nav {
+    background: none;
+    border: 1px solid var(--cafe-medio);
+    color: var(--cafe-medio);
+    padding: 0.4rem 1rem;
+    font-size: 0.85rem;
+    cursor: pointer;
+    text-decoration: none;
+    transition: all 0.3s;
+    font-family: 'Georgia', serif;
+    letter-spacing: 1px;
+}
+
+.btn-nav:hover {
+    background: var(--cafe-medio);
+    color: var(--blanco-opaco);
+}
+
+.btn-primary {
+    background: var(--ocre);
+    border-color: var(--ocre);
+    color: white;
+}
+
+.btn-primary:hover {
+    background: var(--cafe-medio);
+    border-color: var(--cafe-medio);
+}
+
+/* ── Hero ────────────────────────────────────────────────────── */
+.hero {
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+    padding-top: 80px;
+}
+
+.hero-bg {
+    position: absolute;
+    inset: 0;
+    background-size: cover;
+    background-position: center;
+    filter: brightness(0.45);
+    z-index: 0;
+}
+
+.hero-content {
+    text-align: center;
+    z-index: 1;
+    position: relative;
+}
+
+.hero-eyebrow {
+    font-size: 0.85rem;
+    letter-spacing: 4px;
+    color: var(--ocre);
+    margin-bottom: 1.5rem;
+    text-transform: uppercase;
+}
+
+.hero h1 {
+    font-size: 6rem;
+    color: var(--blanco-opaco);
+    letter-spacing: 12px;
+    margin-bottom: 1.5rem;
+    line-height: 1;
+}
+
+.hero-divider {
+    width: 60px;
+    height: 2px;
+    background: var(--ocre);
+    margin: 0 auto 1.5rem;
+}
+
+.subtitle {
+    font-size: 1.3rem;
+    color: var(--beige);
+    font-style: italic;
+    margin-bottom: 2rem;
+}
+
+.btn-hero {
+    display: inline-block;
+    margin-top: 1.5rem;
+    padding: 0.9rem 2.5rem;
+    background: var(--ocre);
+    color: white;
+    text-decoration: none;
+    letter-spacing: 2px;
+    font-size: 0.9rem;
+    transition: background 0.3s;
+}
+
+.btn-hero:hover { background: var(--cafe-medio); }
+
+/* ── Secciones generales ─────────────────────────────────────── */
+.section-header {
+    text-align: center;
+    margin-bottom: 4rem;
+}
+
+.section-label {
+    font-size: 0.8rem;
+    letter-spacing: 4px;
+    color: var(--ocre);
+    text-transform: uppercase;
+    margin-bottom: 0.8rem;
+}
+
+.section-header h2 {
+    font-size: 2.5rem;
+    color: var(--cafe-oscuro);
+    letter-spacing: 2px;
+}
+
+/* ── Productos (vitrina) ─────────────────────────────────────── */
+.productos {
+    padding: 7rem 0;
+    background-color: var(--blanco-opaco);
+}
+
+.productos-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 2rem;
+}
+
+.producto-card {
+    background: white;
+    text-align: center;
+    border: 1px solid var(--beige);
+    overflow: hidden;
+    opacity: 0;
+    transform: translateY(30px);
+    transition: opacity 0.6s ease, transform 0.6s ease, box-shadow 0.4s ease;
+}
+
+.producto-card.visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.producto-card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 12px 30px rgba(62, 39, 35, 0.1);
+}
+
+.producto-img {
+    width: 100%;
+    height: 220px;
+    background-color: var(--beige);
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.producto-img img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.5s ease;
+}
+
+.producto-card:hover .producto-img img { transform: scale(1.05); }
+
+.producto-info { padding: 1.5rem; }
+
+.producto-card h3 {
+    font-size: 1.1rem;
+    color: var(--cafe-oscuro);
+    margin-bottom: 0.5rem;
+    letter-spacing: 1px;
+}
+
+.producto-card p {
+    color: var(--cafe-medio);
+    font-size: 0.9rem;
+    font-style: italic;
+}
+
+/* ── Origen ──────────────────────────────────────────────────── */
+.origen {
+    padding: 7rem 0;
+    background-color: var(--cafe-oscuro);
+    color: var(--blanco-opaco);
+}
+
+.origen-content {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 5rem;
+    align-items: center;
+}
+
+.origen .section-label { color: var(--ocre); }
+
+.origen h2 {
+    font-size: 2.5rem;
+    margin-bottom: 2rem;
+    color: var(--blanco-opaco);
+    letter-spacing: 2px;
+}
+
+.origen-text p {
+    margin-bottom: 1.5rem;
+    font-size: 1rem;
+    line-height: 1.9;
+    color: var(--beige);
+}
+
+.origen-stats {
+    display: flex;
+    gap: 2rem;
+    margin-top: 2.5rem;
+}
+
+.stat { text-align: center; }
+
+.stat-number {
+    font-size: 2rem;
+    color: var(--ocre);
+    font-weight: bold;
+    display: block;
+}
+
+.stat-label {
+    font-size: 0.75rem;
+    letter-spacing: 2px;
+    color: var(--beige);
+    text-transform: uppercase;
+}
+
+.origen-visual {
+    position: relative;
+    height: 420px;
+}
+
+.origen-visual img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    filter: brightness(0.75) sepia(0.2);
+}
+
+.origen-tag {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    background: var(--ocre);
+    color: var(--cafe-oscuro);
+    padding: 0.8rem 1.5rem;
+    font-size: 0.8rem;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    font-weight: bold;
+}
+
+/* ── Puntos de venta ─────────────────────────────────────────── */
+.puntos-venta {
+    padding: 7rem 0;
+    background-color: var(--beige);
+}
+
+.puntos-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 2rem;
+}
+
+.punto-card {
+    background: var(--blanco-opaco);
+    padding: 2.5rem;
+    border-top: 3px solid var(--ocre);
+    opacity: 0;
+    transform: translateY(30px);
+    transition: opacity 0.6s ease, transform 0.6s ease;
+}
+
+.punto-card.visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.punto-card:hover { transform: translateY(-4px); }
+
+.punto-icon { font-size: 1.8rem; margin-bottom: 1rem; }
+
+.punto-card h3 {
+    font-size: 1.3rem;
+    color: var(--cafe-oscuro);
+    margin-bottom: 1rem;
+    letter-spacing: 1px;
+}
+
+.punto-card p {
+    color: var(--cafe-medio);
+    margin-bottom: 0.4rem;
+    font-size: 0.95rem;
+}
+
+/* ── Footer ──────────────────────────────────────────────────── */
+.footer {
+    background-color: var(--cafe-oscuro);
+    color: var(--beige);
+    text-align: center;
+    padding: 3rem 0;
+}
+
+.footer-logo img {
+    height: 60px;
+    width: auto;
+    object-fit: contain;
+    opacity: 0.85;
+    margin-bottom: 1rem;
+}
+
+.footer p {
+    font-size: 0.85rem;
+    margin: 0.3rem 0;
+    opacity: 0.7;
+}
+
+/* ── Formularios compartidos ─────────────────────────────────── */
+.form-group {
+    margin-bottom: 1.2rem;
+}
+
+.form-group label {
+    display: block;
+    font-size: 0.85rem;
+    color: var(--cafe-medio);
+    margin-bottom: 0.4rem;
+    letter-spacing: 1px;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border: 1px solid var(--beige);
+    background: white;
+    font-family: 'Georgia', serif;
+    font-size: 0.95rem;
+    color: var(--cafe-oscuro);
+    outline: none;
+    transition: border-color 0.3s;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+    border-color: var(--ocre);
+}
+
+.auth-error {
+    background: #fdecea;
+    color: #c62828;
+    padding: 0.75rem 1rem;
+    font-size: 0.9rem;
+    margin-bottom: 1rem;
+    border-left: 3px solid #c62828;
+}
+
+.auth-success {
+    background: #e8f5e9;
+    color: #2e7d32;
+    padding: 0.75rem 1rem;
+    font-size: 0.9rem;
+    margin-bottom: 1rem;
+    border-left: 3px solid #2e7d32;
+}
+
+.hidden { display: none !important; }
+
+/* ── Responsive ──────────────────────────────────────────────── */
+@media (max-width: 768px) {
+    .nav-links { display: none; }
+    .hero h1 { font-size: 3.5rem; letter-spacing: 6px; }
+    .origen-content { grid-template-columns: 1fr; gap: 3rem; }
+    .origen-visual { height: 250px; }
+    .origen-stats { justify-content: center; }
+}
+
+@media (max-width: 480px) {
+    .hero h1 { font-size: 2.5rem; letter-spacing: 4px; }
+}

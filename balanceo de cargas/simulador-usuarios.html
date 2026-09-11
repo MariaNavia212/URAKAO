@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>URAKAO — Simulador de Usuarios Concurrentes</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root { --chocolate: #2C1810; --dorado: #B8965A; --marfil: #F8F4EE; --crema: #EDE8DF; --tierra: #8B6347; --verde: #2E7D32; --rojo: #C62828; }
+        body { font-family: system-ui, sans-serif; background: var(--marfil); color: var(--chocolate); min-height: 100vh; padding: 2rem; }
+        h1 { font-family: Georgia, serif; font-size: 1.5rem; letter-spacing: 3px; margin-bottom: 0.3rem; }
+        .subtitle { font-size: 0.8rem; color: var(--dorado); letter-spacing: 1px; margin-bottom: 2rem; }
+
+        .controls { display: flex; gap: 1rem; margin-bottom: 2rem; align-items: flex-end; flex-wrap: wrap; }
+        .control-group label { display: block; font-size: 0.7rem; letter-spacing: 2px; text-transform: uppercase; color: var(--tierra); margin-bottom: 0.3rem; }
+        .control-group input { padding: 0.5rem; border: 1px solid var(--crema); font-size: 0.9rem; width: 120px; background: white; }
+        .btn { padding: 0.6rem 1.5rem; border: none; font-size: 0.85rem; cursor: pointer; letter-spacing: 1px; transition: background 0.2s; }
+        .btn-start { background: var(--chocolate); color: white; }
+        .btn-start:hover { background: #4A2C1A; }
+        .btn-stop { background: var(--rojo); color: white; }
+
+        .users-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap: 0.5rem; margin-bottom: 2rem; }
+        .user-dot { width: 100%; aspect-ratio: 1; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; font-weight: 700; border-radius: 50%; transition: all 0.3s; }
+        .user-idle { background: var(--crema); color: var(--tierra); }
+        .user-loading { background: var(--dorado); color: white; animation: pulse 0.5s infinite alternate; }
+        .user-ok { background: var(--verde); color: white; }
+        .user-error { background: var(--rojo); color: white; }
+
+        @keyframes pulse { from { transform: scale(1); } to { transform: scale(1.1); } }
+
+        .stats-row { display: flex; gap: 2rem; margin-bottom: 2rem; flex-wrap: wrap; }
+        .stat { text-align: center; }
+        .stat-val { font-family: Georgia, serif; font-size: 1.8rem; font-weight: 700; color: var(--chocolate); }
+        .stat-label { font-size: 0.65rem; letter-spacing: 2px; text-transform: uppercase; color: var(--tierra); }
+
+        .timeline { background: white; border: 1px solid var(--crema); padding: 1rem; max-height: 300px; overflow-y: auto; font-family: monospace; font-size: 0.78rem; line-height: 1.8; }
+        .t-ok { color: var(--verde); }
+        .t-err { color: var(--rojo); }
+        .t-info { color: var(--dorado); }
+    </style>
+</head>
+<body>
+    <h1>URAKAO</h1>
+    <p class="subtitle">Simulador de Usuarios Concurrentes</p>
+
+    <div class="controls">
+        <div class="control-group">
+            <label>Usuarios</label>
+            <input type="number" id="num-users" value="20" min="1" max="50">
+        </div>
+        <div class="control-group">
+            <label>Duración (seg)</label>
+            <input type="number" id="duracion" value="15" min="5" max="120">
+        </div>
+        <button class="btn btn-start" id="btn-start">▶ Simular</button>
+        <button class="btn btn-stop hidden" id="btn-stop">■ Detener</button>
+    </div>
+
+    <div class="users-grid" id="users-grid"></div>
+
+    <div class="stats-row">
+        <div class="stat"><div class="stat-val" id="s-enviadas">0</div><div class="stat-label">Enviadas</div></div>
+        <div class="stat"><div class="stat-val" id="s-ok">0</div><div class="stat-label">Exitosas</div></div>
+        <div class="stat"><div class="stat-val" id="s-err">0</div><div class="stat-label">Errores</div></div>
+        <div class="stat"><div class="stat-val" id="s-prom">0ms</div><div class="stat-label">Promedio</div></div>
+        <div class="stat"><div class="stat-val" id="s-rps">0</div><div class="stat-label">Req/s</div></div>
+    </div>
+
+    <div class="timeline" id="timeline">
+        <p class="t-info">Configura los parámetros y haz clic en "Simular"</p>
+    </div>
+
+    <script>
+        const URL_BASE = "https://urakao.web.app";
+        const RUTAS = ["/", "/login", "/tienda", "/checkout"];
+
+        let activo = false;
+        let stats = { enviadas: 0, ok: 0, err: 0, tiempos: [] };
+        let inicioGlobal = 0;
+
+        document.getElementById("btn-start").addEventListener("click", iniciar);
+        document.getElementById("btn-stop").addEventListener("click", () => { activo = false; });
+
+        async function iniciar() {
+            const numUsers = parseInt(document.getElementById("num-users").value);
+            const duracion = parseInt(document.getElementById("duracion").value) * 1000;
+
+            activo = true;
+            stats = { enviadas: 0, ok: 0, err: 0, tiempos: [] };
+            inicioGlobal = Date.now();
+
+            document.getElementById("btn-start").classList.add("hidden");
+            document.getElementById("btn-stop").classList.remove("hidden");
+            document.getElementById("timeline").innerHTML = "";
+
+            // Crear dots de usuarios
+            const grid = document.getElementById("users-grid");
+            grid.innerHTML = "";
+            for (let i = 0; i < numUsers; i++) {
+                const dot = document.createElement("div");
+                dot.className = "user-dot user-idle";
+                dot.id = `user-${i}`;
+                dot.textContent = i + 1;
+                grid.appendChild(dot);
+            }
+
+            log("info", `Simulación iniciada: ${numUsers} usuarios durante ${duracion/1000}s`);
+
+            // Lanzar usuarios
+            const promesas = [];
+            for (let i = 0; i < numUsers; i++) {
+                promesas.push(simularUsuario(i, duracion));
+            }
+
+            await Promise.all(promesas);
+            finalizar();
+        }
+
+        async function simularUsuario(id, duracion) {
+            const dot = document.getElementById(`user-${id}`);
+            while (activo && (Date.now() - inicioGlobal) < duracion) {
+                const ruta = RUTAS[Math.floor(Math.random() * RUTAS.length)];
+                dot.className = "user-dot user-loading";
+
+                const t0 = performance.now();
+                try {
+                    await fetch(URL_BASE + ruta, { mode: "no-cors", cache: "no-store" });
+                    const ms = Math.round(performance.now() - t0);
+                    stats.enviadas++;
+                    stats.ok++;
+                    stats.tiempos.push(ms);
+                    dot.className = "user-dot user-ok";
+                } catch (e) {
+                    stats.enviadas++;
+                    stats.err++;
+                    dot.className = "user-dot user-error";
+                }
+
+                actualizarStats();
+                await sleep(300 + Math.random() * 700);
+            }
+            dot.className = "user-dot user-idle";
+        }
+
+        function actualizarStats() {
+            const prom = stats.tiempos.length > 0
+                ? Math.round(stats.tiempos.reduce((a,b) => a+b, 0) / stats.tiempos.length)
+                : 0;
+            const seg = (Date.now() - inicioGlobal) / 1000;
+            const rps = seg > 0 ? (stats.enviadas / seg).toFixed(1) : 0;
+
+            document.getElementById("s-enviadas").textContent = stats.enviadas;
+            document.getElementById("s-ok").textContent = stats.ok;
+            document.getElementById("s-err").textContent = stats.err;
+            document.getElementById("s-prom").textContent = prom + "ms";
+            document.getElementById("s-rps").textContent = rps;
+        }
+
+        function finalizar() {
+            activo = false;
+            document.getElementById("btn-start").classList.remove("hidden");
+            document.getElementById("btn-stop").classList.add("hidden");
+
+            const prom = stats.tiempos.length > 0
+                ? Math.round(stats.tiempos.reduce((a,b) => a+b, 0) / stats.tiempos.length)
+                : 0;
+
+            log("info", "═══════════════════════════════════════");
+            log("info", `RESULTADO: ${stats.enviadas} solicitudes | ${stats.ok} ok | ${stats.err} errores`);
+            log("info", `Promedio: ${prom}ms | Tasa éxito: ${Math.round(stats.ok/stats.enviadas*100)}%`);
+
+            if (prom < 300) log("ok", "✓ RENDIMIENTO EXCELENTE");
+            else if (prom < 800) log("info", "⚠ RENDIMIENTO ACEPTABLE");
+            else log("err", "✗ RENDIMIENTO BAJO");
+        }
+
+        function log(tipo, msg) {
+            const tl = document.getElementById("timeline");
+            const clase = tipo === "ok" ? "t-ok" : tipo === "err" ? "t-err" : "t-info";
+            const hora = new Date().toLocaleTimeString("es-CO", { hour12: false });
+            tl.innerHTML += `<div class="${clase}">[${hora}] ${msg}</div>`;
+            tl.scrollTop = tl.scrollHeight;
+        }
+
+        function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+    </script>
+</body>
+</html>

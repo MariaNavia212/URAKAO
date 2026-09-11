@@ -1,0 +1,27 @@
+# Firebase
+.firebase/
+firebase-debug.log
+.firebaserc
+
+# Node (si se usa en el futuro)
+node_modules/
+npm-debug.log*
+
+# Sistema operativo
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Editor
+.vscode/
+*.suo
+*.user
+
+# Variables de entorno
+.env
+.env.local
+.env*.local
+
+# Logs
+*.log
+logs/

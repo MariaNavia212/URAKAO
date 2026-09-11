@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>URAKAO - Checkout</title>
+    <style>
+        /* ============================================================
+           URAKAO — Estilos globales compartidos
+           ============================================================ */
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            /* Paleta oficial URAKAO — Manual de Marca */
+            --cafe-oscuro:  #432818;
+            --cafe-medio:   #5D3A1A;
+            --crema:        #ECE8DB;
+            --verde:        #8BA040;
+            --rojo:         #BC4749;
+            --ocre:         #BC4749;
+            --blanco-opaco: #F5F2EC;
+            --beige:        #ECE8DB;
+        }
+
+        html { scroll-behavior: smooth; }
+
+        body {
+            font-family: 'Georgia', serif;
+            color: var(--cafe-oscuro);
+            background-color: var(--blanco-opaco);
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        /* ── Navbar ─────────────────────────────────────────────────── */
+        .navbar {
+            background-color: var(--blanco-opaco);
+            padding: 1rem 0;
+            position: fixed;
+            width: 100%;
+            top: 0;
+            z-index: 1000;
+            border-bottom: 1px solid var(--beige);
+        }
+
+        .navbar .container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .logo img {
+            height: 48px;
+            width: auto;
+            object-fit: contain;
+        }
+
+        .nav-actions {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .btn-nav {
+            background: none;
+            border: 1px solid var(--cafe-medio);
+            color: var(--cafe-medio);
+            padding: 0.4rem 1rem;
+            font-size: 0.85rem;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.3s;
+            font-family: 'Georgia', serif;
+            letter-spacing: 1px;
+        }
+
+        .btn-nav:hover {
+            background: var(--cafe-medio);
+            color: var(--blanco-opaco);
+        }
+
+        /* ── Formularios compartidos ─────────────────────────────────── */
+        .form-group {
+            margin-bottom: 1.2rem;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 0.85rem;
+            color: var(--cafe-medio);
+            margin-bottom: 0.4rem;
+            letter-spacing: 1px;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: 1px solid var(--beige);
+            background: white;
+            font-family: 'Georgia', serif;
+            font-size: 0.95rem;
+            color: var(--cafe-oscuro);
+            outline: none;
+            transition: border-color 0.3s;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            border-color: var(--ocre);
+        }
+
+        .auth-error {
+            background: #fdecea;
+            color: #c62828;
+            padding: 0.75rem 1rem;
+            font-size: 0.9rem;
+            margin-bottom: 1rem;
+            border-left: 3px solid #c62828;
+        }
+
+        .auth-success {
+            background: #e8f5e9;
+            color: #2e7d32;
+            padding: 0.75rem 1rem;
+            font-size: 0.9rem;
+            margin-bottom: 1rem;
+            border-left: 3px solid #2e7d32;
+        }
+
+        .hidden { display: none !important; }
+
+        .btn-auth {
+            width: 100%;
+            padding: 0.9rem;
+            background: var(--cafe-oscuro);
+            color: var(--blanco-opaco);
+            border: none;
+            font-family: 'Georgia', serif;
+            font-size: 1rem;
+            letter-spacing: 2px;
+            cursor: pointer;
+            transition: background 0.3s;
+            margin-top: 0.5rem;
+        }
+
+        .btn-auth:hover { background: var(--ocre); }
+
+        /* ── Responsive ──────────────────────────────────────────────── */
+        @media (max-width: 768px) {
+            .nav-links { display: none; }
+        }
+
+        /* ============================================================
+           URAKAO — Estilos del checkout
+           ============================================================ */
+
+        .checkout-main {
+            padding-top: 100px;
+            min-height: 100vh;
+            padding-bottom: 4rem;
+        }
+
+        .checkout-grid {
+            display: grid;
+            grid-template-columns: 1fr 380px;
+            gap: 3rem;
+            padding-top: 3rem;
+            align-items: start;
+        }
+
+        .checkout-form-section h2,
+        .checkout-resumen h2 {
+            font-size: 1.8rem;
+            color: var(--cafe-oscuro);
+            letter-spacing: 2px;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--beige);
+        }
+
+        /* Resumen */
+        .checkout-resumen {
+            background: white;
+            padding: 2rem;
+            border: 1px solid var(--beige);
+            position: sticky;
+            top: 100px;
+        }
+
+        .resumen-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.7rem 0;
+            border-bottom: 1px solid var(--beige);
+            font-size: 0.95rem;
+            color: var(--cafe-medio);
+        }
+
+        .resumen-total {
+            display: flex;
+            justify-content: space-between;
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: var(--cafe-oscuro);
+            margin-top: 1.2rem;
+            padding-top: 1rem;
+            border-top: 2px solid var(--cafe-oscuro);
+        }
+
+        .resumen-nota {
+            font-size: 0.8rem;
+            color: var(--cafe-medio);
+            font-style: italic;
+            margin-top: 1rem;
+        }
+
+        @media (max-width: 768px) {
+            .checkout-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .checkout-resumen {
+                position: static;
+                order: -1;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar">
+        <div class="container">
+            <div class="logo">
+                <a href="/">
+                    <img src="/Logo Oficial.jpeg" alt="URAKAO Logo">
+                </a>
+            </div>
+            <div class="nav-actions">
+                <a href="/tienda" class="btn-nav">← Volver a la tienda</a>
+            </div>
+        </div>
+    </nav>
+
+    <main class="checkout-main">
+        <div class="container">
+            <div class="checkout-grid">
+
+                <!-- Formulario de domicilio -->
+                <div class="checkout-form-section">
+                    <h2>Datos de entrega</h2>
+
+                    <div id="checkout-error" class="auth-error hidden"></div>
+                    <div id="checkout-success" class="auth-success hidden"></div>
+
+                    <form id="form-checkout">
+                        <div class="form-group">
+                            <label for="ch-nombre">Nombre completo</label>
+                            <input type="text" id="ch-nombre" placeholder="Nombre del destinatario" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="ch-telefono">Teléfono de contacto</label>
+                            <input type="tel" id="ch-telefono" placeholder="300 000 0000" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="ch-ciudad">Ciudad</label>
+                            <input type="text" id="ch-ciudad" placeholder="Ciudad" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="ch-direccion">Dirección</label>
+                            <input type="text" id="ch-direccion" placeholder="Calle, carrera, número, barrio" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="ch-indicaciones">Indicaciones adicionales</label>
+                            <textarea id="ch-indicaciones" placeholder="Apto, piso, referencias del lugar..." rows="3"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="ch-pago">Método de pago</label>
+                            <select id="ch-pago" required>
+                                <option value="">Selecciona un método</option>
+                                <option value="efectivo">Efectivo contra entrega</option>
+                                <option value="transferencia">Transferencia bancaria</option>
+                                <option value="nequi">Nequi</option>
+                                <option value="daviplata">Daviplata</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn-auth" id="btn-pedido">Confirmar Pedido</button>
+                    </form>
+                </div>
+
+                <!-- Resumen del pedido -->
+                <div class="checkout-resumen">
+                    <h2>Resumen del pedido</h2>
+                    <div id="resumen-items" class="resumen-items"></div>
+                    <div class="resumen-total">
+                        <span>Total</span>
+                        <span id="resumen-total">$0</span>
+                    </div>
+                    <p class="resumen-nota">* El domicilio se calcula según tu ubicación</p>
+                </div>
+
+            </div>
+        </div>
+    </main>
+
+    <script type="module" src="/src/js/firebase.js"></script>
+    <!-- EmailJS SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+    <script>emailjs.init("IZ7TXCAyEhRyu10OA");</script>
+    <script type="module" src="/src/js/checkout.js"></script>
+</body>
+</html>

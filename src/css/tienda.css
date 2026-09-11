@@ -1,0 +1,250 @@
+/* ============================================================
+   URAKAO — Estilos de la tienda y carrito
+   ============================================================ */
+
+.tienda-main {
+    padding-top: 100px;
+    min-height: 100vh;
+}
+
+.tienda-header {
+    padding: 3rem 0 2rem;
+}
+
+.tienda-header h1 {
+    font-size: 2.5rem;
+    color: var(--cafe-oscuro);
+    letter-spacing: 2px;
+}
+
+/* Tarjetas de producto en tienda */
+.producto-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--beige);
+}
+
+.producto-precio {
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: var(--cafe-oscuro);
+}
+
+.producto-desc {
+    color: var(--cafe-medio);
+    font-size: 0.85rem;
+    font-style: italic;
+    min-height: 2.5rem;
+}
+
+.btn-agregar {
+    background: var(--ocre);
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    font-family: 'Georgia', serif;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: background 0.3s;
+    letter-spacing: 1px;
+}
+
+.btn-agregar:hover { background: var(--cafe-medio); }
+
+/* Botón carrito en navbar */
+.btn-carrito {
+    background: none;
+    border: 1px solid var(--cafe-medio);
+    padding: 0.4rem 1rem;
+    font-size: 0.9rem;
+    cursor: pointer;
+    color: var(--cafe-oscuro);
+    transition: all 0.3s;
+    position: relative;
+}
+
+.btn-carrito:hover {
+    background: var(--cafe-oscuro);
+    color: white;
+}
+
+#carrito-count {
+    background: var(--ocre);
+    color: white;
+    border-radius: 50%;
+    padding: 0 5px;
+    font-size: 0.75rem;
+    font-weight: bold;
+}
+
+/* Panel lateral del carrito */
+.carrito-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.4);
+    z-index: 1100;
+}
+
+.carrito-panel {
+    position: fixed;
+    top: 0;
+    right: 0;
+    width: 380px;
+    max-width: 100vw;
+    height: 100vh;
+    background: var(--blanco-opaco);
+    z-index: 1200;
+    display: flex;
+    flex-direction: column;
+    box-shadow: -4px 0 20px rgba(0,0,0,0.15);
+}
+
+.carrito-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.5rem;
+    border-bottom: 1px solid var(--beige);
+}
+
+.carrito-header h3 {
+    font-size: 1.3rem;
+    letter-spacing: 2px;
+    color: var(--cafe-oscuro);
+}
+
+.carrito-close {
+    background: none;
+    border: none;
+    font-size: 1.2rem;
+    cursor: pointer;
+    color: var(--cafe-medio);
+    padding: 0.3rem;
+}
+
+.carrito-items {
+    flex: 1;
+    overflow-y: auto;
+    padding: 1rem 1.5rem;
+}
+
+.carrito-vacio {
+    text-align: center;
+    color: var(--cafe-medio);
+    font-style: italic;
+    margin-top: 2rem;
+}
+
+.carrito-item {
+    display: flex;
+    gap: 1rem;
+    padding: 1rem 0;
+    border-bottom: 1px solid var(--beige);
+}
+
+.carrito-item img {
+    width: 60px;
+    height: 60px;
+    object-fit: cover;
+    background: var(--beige);
+    flex-shrink: 0;
+}
+
+.carrito-item-info { flex: 1; }
+
+.carrito-item-nombre {
+    font-size: 0.95rem;
+    color: var(--cafe-oscuro);
+    margin-bottom: 0.2rem;
+}
+
+.carrito-item-precio {
+    font-size: 0.85rem;
+    color: var(--ocre);
+    margin-bottom: 0.5rem;
+}
+
+.carrito-item-cantidad {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.carrito-item-cantidad button {
+    background: var(--beige);
+    border: none;
+    width: 26px;
+    height: 26px;
+    cursor: pointer;
+    font-size: 1rem;
+    color: var(--cafe-oscuro);
+    transition: background 0.2s;
+}
+
+.carrito-item-cantidad button:hover { background: var(--ocre); color: white; }
+
+.carrito-item-cantidad span {
+    min-width: 20px;
+    text-align: center;
+    font-size: 0.95rem;
+}
+
+.btn-eliminar {
+    margin-left: auto;
+    background: none !important;
+    color: #c62828 !important;
+    font-size: 0.9rem !important;
+}
+
+.carrito-footer {
+    padding: 1.5rem;
+    border-top: 1px solid var(--beige);
+}
+
+.carrito-total {
+    display: flex;
+    justify-content: space-between;
+    font-size: 1.1rem;
+    font-weight: bold;
+    color: var(--cafe-oscuro);
+    margin-bottom: 1rem;
+}
+
+.btn-checkout {
+    width: 100%;
+    padding: 1rem;
+    background: var(--cafe-oscuro);
+    color: var(--blanco-opaco);
+    border: none;
+    font-family: 'Georgia', serif;
+    font-size: 1rem;
+    letter-spacing: 2px;
+    cursor: pointer;
+    transition: background 0.3s;
+}
+
+.btn-checkout:hover { background: var(--ocre); }
+
+/* Estados de carga */
+.loading-spinner {
+    text-align: center;
+    color: var(--cafe-medio);
+    font-style: italic;
+    padding: 3rem;
+    grid-column: 1 / -1;
+}
+
+.sin-productos {
+    text-align: center;
+    color: var(--cafe-medio);
+    font-style: italic;
+    padding: 3rem;
+    grid-column: 1 / -1;
+}
+
+@media (max-width: 480px) {
+    .carrito-panel { width: 100vw; }
+}

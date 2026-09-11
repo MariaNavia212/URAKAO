@@ -1,0 +1,360 @@
+/* ============================================================
+   URAKAO — Estilos del panel de administración
+   Paleta: Manual de Marca URAKAO
+   ============================================================ */
+
+/* Sobreescribir variables para admin si no hereda de styles.css */
+.admin-body {
+    --ocre:         #BC4749;
+    --cafe-oscuro:  #432818;
+    --cafe-medio:   #5D3A1A;
+    --blanco-opaco: #F5F2EC;
+    --beige:        #ECE8DB;
+
+    background: #ECE8DB;
+    min-height: 100vh;
+}
+
+/* Navbar admin */
+.admin-nav {
+    background: var(--cafe-oscuro);
+    padding: 1rem 2rem;
+    position: fixed;
+    width: 100%;
+    top: 0;
+    z-index: 100;
+}
+
+.admin-nav-inner {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+.admin-nav .logo img { height: 40px; filter: brightness(0.9); }
+
+.admin-badge {
+    background: var(--ocre);
+    color: white;
+    font-size: 0.75rem;
+    letter-spacing: 2px;
+    padding: 0.3rem 0.8rem;
+    text-transform: uppercase;
+}
+
+.admin-nav .user-greeting { color: var(--beige); font-size: 0.85rem; margin-left: auto; }
+
+/* Main */
+.admin-main {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 100px 2rem 3rem;
+}
+
+/* Stats */
+.admin-stats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1.5rem;
+    margin-bottom: 2.5rem;
+}
+
+.stat-card {
+    background: white;
+    padding: 1.5rem 2rem;
+    border-top: 3px solid var(--ocre);
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+}
+
+.stat-num {
+    font-size: 2rem;
+    font-weight: bold;
+    color: var(--cafe-oscuro);
+}
+
+.stat-lbl {
+    font-size: 0.8rem;
+    letter-spacing: 2px;
+    color: var(--cafe-medio);
+    text-transform: uppercase;
+}
+
+/* Filtros */
+.admin-filtros {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.admin-filtros h2 {
+    font-size: 1.5rem;
+    color: var(--cafe-oscuro);
+    letter-spacing: 2px;
+}
+
+.filtros-grupo {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.filtro-btn {
+    background: white;
+    border: 1px solid var(--beige);
+    padding: 0.4rem 1rem;
+    font-family: 'Georgia', serif;
+    font-size: 0.85rem;
+    cursor: pointer;
+    color: var(--cafe-medio);
+    transition: all 0.2s;
+    letter-spacing: 1px;
+}
+
+.filtro-btn:hover { border-color: var(--ocre); color: var(--ocre); }
+.filtro-btn.active {
+    background: var(--cafe-oscuro);
+    border-color: var(--cafe-oscuro);
+    color: white;
+}
+
+/* Lista de pedidos */
+.pedidos-lista {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+    gap: 1.5rem;
+}
+
+.pedido-card {
+    background: white;
+    border: 1px solid var(--beige);
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+    overflow: hidden;
+}
+
+.pedido-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px rgba(62,39,35,0.1);
+}
+
+.pedido-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: 1.2rem 1.5rem 0.8rem;
+    border-bottom: 1px solid var(--beige);
+}
+
+.pedido-cliente {
+    font-size: 1rem;
+    font-weight: bold;
+    color: var(--cafe-oscuro);
+    margin-bottom: 0.3rem;
+}
+
+.pedido-contacto {
+    font-size: 0.8rem;
+    color: var(--cafe-medio);
+}
+
+.pedido-card-body {
+    padding: 0.8rem 1.5rem;
+}
+
+.pedido-dir {
+    font-size: 0.85rem;
+    color: var(--cafe-medio);
+    margin-bottom: 0.4rem;
+}
+
+.pedido-productos {
+    font-size: 0.82rem;
+    color: var(--ocre);
+    font-style: italic;
+}
+
+.pedido-card-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.8rem 1.5rem;
+    background: #faf9f7;
+    border-top: 1px solid var(--beige);
+}
+
+.pedido-fecha { font-size: 0.78rem; color: var(--cafe-medio); }
+.pedido-total { font-size: 1rem; font-weight: bold; color: var(--cafe-oscuro); }
+
+/* Badges de estado */
+.estado-badge {
+    font-size: 0.72rem;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    padding: 0.3rem 0.7rem;
+    font-weight: bold;
+    white-space: nowrap;
+}
+
+.estado-pendiente  { background: #FFF3E0; color: #E65100; }
+.estado-en\ camino { background: #E3F2FD; color: #1565C0; }
+.estado-entregado  { background: #E8F5E9; color: #2E7D32; }
+.estado-cancelado  { background: #FFEBEE; color: #C62828; }
+
+/* Modal */
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    z-index: 1000;
+}
+
+.modal-pedido {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: white;
+    width: 90%;
+    max-width: 560px;
+    max-height: 85vh;
+    overflow-y: auto;
+    z-index: 1001;
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.5rem;
+    border-bottom: 1px solid var(--beige);
+    position: sticky;
+    top: 0;
+    background: white;
+}
+
+.modal-header h3 {
+    font-size: 1.1rem;
+    color: var(--cafe-oscuro);
+    letter-spacing: 1px;
+}
+
+.modal-close {
+    background: none;
+    border: none;
+    font-size: 1.2rem;
+    cursor: pointer;
+    color: var(--cafe-medio);
+}
+
+.modal-body { padding: 1.5rem; }
+
+.detalle-seccion {
+    margin-bottom: 1.5rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid var(--beige);
+}
+
+.detalle-seccion:last-child { border-bottom: none; }
+
+.detalle-seccion h4 {
+    font-size: 0.75rem;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--ocre);
+    margin-bottom: 0.8rem;
+}
+
+.detalle-seccion p {
+    font-size: 0.9rem;
+    color: var(--cafe-medio);
+    margin-bottom: 0.4rem;
+}
+
+.detalle-seccion p strong { color: var(--cafe-oscuro); }
+
+.link-tel {
+    color: var(--cafe-oscuro);
+    text-decoration: none;
+    font-weight: bold;
+    margin-right: 1rem;
+}
+
+.link-wa {
+    background: #25D366;
+    color: white;
+    padding: 0.2rem 0.7rem;
+    text-decoration: none;
+    font-size: 0.82rem;
+    border-radius: 2px;
+}
+
+.detalle-producto {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid var(--beige);
+    font-size: 0.9rem;
+    color: var(--cafe-medio);
+}
+
+.detalle-total {
+    display: flex;
+    justify-content: space-between;
+    font-weight: bold;
+    color: var(--cafe-oscuro);
+    padding-top: 0.8rem;
+    font-size: 1rem;
+}
+
+/* Botones de estado */
+.estado-botones {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    margin-top: 0.8rem;
+}
+
+.btn-estado {
+    padding: 0.5rem 1rem;
+    border: 1px solid var(--beige);
+    background: white;
+    font-family: 'Georgia', serif;
+    font-size: 0.82rem;
+    cursor: pointer;
+    color: var(--cafe-medio);
+    transition: all 0.2s;
+    letter-spacing: 1px;
+}
+
+.btn-estado:hover { border-color: var(--ocre); color: var(--ocre); }
+.btn-estado.active { background: var(--cafe-oscuro); color: white; border-color: var(--cafe-oscuro); }
+.btn-cancelar.active { background: #C62828; border-color: #C62828; }
+
+/* Estados vacíos */
+.loading-admin, .sin-pedidos, .error-admin {
+    text-align: center;
+    padding: 3rem;
+    color: var(--cafe-medio);
+    font-style: italic;
+    grid-column: 1 / -1;
+}
+
+.error-admin { color: #C62828; }
+
+/* Responsive */
+@media (max-width: 900px) {
+    .admin-stats { grid-template-columns: repeat(2, 1fr); }
+    .pedidos-lista { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 480px) {
+    .admin-stats { grid-template-columns: 1fr 1fr; }
+    .admin-filtros { flex-direction: column; align-items: flex-start; }
+}

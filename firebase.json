@@ -1,0 +1,43 @@
+{
+  "hosting": {
+    "public": ".",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**",
+      "firestore.rules",
+      "firestore.indexes.json",
+      "*.xlsx",
+      "~$*",
+      "Fotos Camara Sesion/**",
+      "Menú/**"
+    ],
+    "cleanUrls": true,
+    "rewrites": [
+      { "source": "/",         "destination": "/src/index.html"    },
+      { "source": "/tienda",   "destination": "/src/tienda.html"   },
+      { "source": "/login",    "destination": "/src/login.html"    },
+      { "source": "/checkout", "destination": "/src/checkout.html" },
+      { "source": "/admin",    "destination": "/src/admin.html"    },
+      { "source": "/seed",     "destination": "/src/seed.html"     }
+    ],
+    "redirects": [
+      { "source": "/src/index.html",    "destination": "/",         "type": 301 },
+      { "source": "/src/tienda.html",   "destination": "/tienda",   "type": 301 },
+      { "source": "/src/login.html",    "destination": "/login",    "type": 301 },
+      { "source": "/src/checkout.html", "destination": "/checkout", "type": 301 }
+    ],
+    "headers": [
+      {
+        "source": "**/*.@(jpg|jpeg|png|webp|gif)",
+        "headers": [{ "key": "Cache-Control", "value": "max-age=86400" }]
+      }
+    ]
+  },
+  "firestore": {
+    "database": "(default)",
+    "location": "nam5",
+    "rules": "firestore.rules",
+    "indexes": "firestore.indexes.json"
+  }
+}

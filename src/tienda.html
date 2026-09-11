@@ -1,0 +1,782 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>URAKAO - Tienda</title>
+    <style>
+        /* ============================================================
+           URAKAO — Estilos globales compartidos
+           ============================================================ */
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            /* Paleta oficial URAKAO — Manual de Marca */
+            --cafe-oscuro:  #432818;
+            --cafe-medio:   #5D3A1A;
+            --crema:        #ECE8DB;
+            --verde:        #8BA040;
+            --rojo:         #BC4749;
+            --ocre:         #BC4749;
+            --blanco-opaco: #F5F2EC;
+            --beige:        #ECE8DB;
+        }
+
+        html { scroll-behavior: smooth; }
+
+        body {
+            font-family: 'Georgia', serif;
+            color: var(--cafe-oscuro);
+            background-color: var(--blanco-opaco);
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        /* ── Navbar ─────────────────────────────────────────────────── */
+        .navbar {
+            background-color: var(--blanco-opaco);
+            padding: 1rem 0;
+            position: fixed;
+            width: 100%;
+            top: 0;
+            z-index: 1000;
+            border-bottom: 1px solid var(--beige);
+        }
+
+        .navbar .container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .logo img {
+            height: 48px;
+            width: auto;
+            object-fit: contain;
+        }
+
+        .nav-links {
+            display: flex;
+            list-style: none;
+            gap: 2rem;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: var(--cafe-medio);
+            font-size: 0.9rem;
+            letter-spacing: 1px;
+            transition: color 0.3s;
+        }
+
+        .nav-links a:hover,
+        .nav-links a.active { color: var(--ocre); }
+
+        .nav-actions {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .user-greeting {
+            font-size: 0.85rem;
+            color: var(--cafe-medio);
+            font-style: italic;
+        }
+
+        .btn-nav {
+            background: none;
+            border: 1px solid var(--cafe-medio);
+            color: var(--cafe-medio);
+            padding: 0.4rem 1rem;
+            font-size: 0.85rem;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.3s;
+            font-family: 'Georgia', serif;
+            letter-spacing: 1px;
+        }
+
+        .btn-nav:hover {
+            background: var(--cafe-medio);
+            color: var(--blanco-opaco);
+        }
+
+        .btn-primary {
+            background: var(--ocre);
+            border-color: var(--ocre);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--cafe-medio);
+            border-color: var(--cafe-medio);
+        }
+
+        /* ── Secciones generales ─────────────────────────────────────── */
+        .section-label {
+            font-size: 0.8rem;
+            letter-spacing: 4px;
+            color: var(--ocre);
+            text-transform: uppercase;
+            margin-bottom: 0.8rem;
+        }
+
+        /* ── Productos (vitrina) ─────────────────────────────────────── */
+        .productos-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 2rem;
+        }
+
+        .producto-card {
+            background: white;
+            text-align: center;
+            border: 1px solid var(--beige);
+            overflow: hidden;
+            opacity: 0;
+            transform: translateY(30px);
+            transition: opacity 0.6s ease, transform 0.6s ease, box-shadow 0.4s ease;
+        }
+
+        .producto-card.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .producto-card:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 12px 30px rgba(62, 39, 35, 0.1);
+        }
+
+        .producto-img {
+            width: 100%;
+            height: 220px;
+            background-color: var(--beige);
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .producto-img img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.5s ease;
+        }
+
+        .producto-card:hover .producto-img img { transform: scale(1.05); }
+
+        .producto-info { padding: 1.5rem; }
+
+        .producto-card h3 {
+            font-size: 1.1rem;
+            color: var(--cafe-oscuro);
+            margin-bottom: 0.5rem;
+            letter-spacing: 1px;
+        }
+
+        .producto-card p {
+            color: var(--cafe-medio);
+            font-size: 0.9rem;
+            font-style: italic;
+        }
+
+        /* ── Formularios compartidos ─────────────────────────────────── */
+        .form-group {
+            margin-bottom: 1.2rem;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 0.85rem;
+            color: var(--cafe-medio);
+            margin-bottom: 0.4rem;
+            letter-spacing: 1px;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: 1px solid var(--beige);
+            background: white;
+            font-family: 'Georgia', serif;
+            font-size: 0.95rem;
+            color: var(--cafe-oscuro);
+            outline: none;
+            transition: border-color 0.3s;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            border-color: var(--ocre);
+        }
+
+        .auth-error {
+            background: #fdecea;
+            color: #c62828;
+            padding: 0.75rem 1rem;
+            font-size: 0.9rem;
+            margin-bottom: 1rem;
+            border-left: 3px solid #c62828;
+        }
+
+        .auth-success {
+            background: #e8f5e9;
+            color: #2e7d32;
+            padding: 0.75rem 1rem;
+            font-size: 0.9rem;
+            margin-bottom: 1rem;
+            border-left: 3px solid #2e7d32;
+        }
+
+        .hidden { display: none !important; }
+
+        /* ── Responsive ──────────────────────────────────────────────── */
+        @media (max-width: 768px) {
+            .nav-links { display: none; }
+        }
+
+        /* ============================================================
+           URAKAO — Estilos de la tienda y carrito
+           ============================================================ */
+
+        .tienda-main {
+            padding-top: 100px;
+            min-height: 100vh;
+        }
+
+        .tienda-header {
+            padding: 3rem 0 2rem;
+        }
+
+        .tienda-header h1 {
+            font-size: 2.5rem;
+            color: var(--cafe-oscuro);
+            letter-spacing: 2px;
+        }
+
+        /* Tarjetas de producto en tienda */
+        .producto-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid var(--beige);
+        }
+
+        .producto-precio {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: var(--cafe-oscuro);
+        }
+
+        .producto-desc {
+            color: var(--cafe-medio);
+            font-size: 0.85rem;
+            font-style: italic;
+            min-height: 2.5rem;
+        }
+
+        .btn-agregar {
+            background: var(--ocre);
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            font-family: 'Georgia', serif;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: background 0.3s;
+            letter-spacing: 1px;
+        }
+
+        .btn-agregar:hover { background: var(--cafe-medio); }
+
+        /* Botón carrito en navbar */
+        .btn-carrito {
+            background: none;
+            border: 1px solid var(--cafe-medio);
+            padding: 0.4rem 1rem;
+            font-size: 0.9rem;
+            cursor: pointer;
+            color: var(--cafe-oscuro);
+            transition: all 0.3s;
+            position: relative;
+        }
+
+        .btn-carrito:hover {
+            background: var(--cafe-oscuro);
+            color: white;
+        }
+
+        #carrito-count {
+            background: var(--ocre);
+            color: white;
+            border-radius: 50%;
+            padding: 0 5px;
+            font-size: 0.75rem;
+            font-weight: bold;
+        }
+
+        /* Panel lateral del carrito */
+        .carrito-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.4);
+            z-index: 1100;
+        }
+
+        .carrito-panel {
+            position: fixed;
+            top: 0;
+            right: 0;
+            width: 380px;
+            max-width: 100vw;
+            height: 100vh;
+            background: var(--blanco-opaco);
+            z-index: 1200;
+            display: flex;
+            flex-direction: column;
+            box-shadow: -4px 0 20px rgba(0,0,0,0.15);
+        }
+
+        .carrito-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.5rem;
+            border-bottom: 1px solid var(--beige);
+        }
+
+        .carrito-header h3 {
+            font-size: 1.3rem;
+            letter-spacing: 2px;
+            color: var(--cafe-oscuro);
+        }
+
+        .carrito-close {
+            background: none;
+            border: none;
+            font-size: 1.2rem;
+            cursor: pointer;
+            color: var(--cafe-medio);
+            padding: 0.3rem;
+        }
+
+        .carrito-items {
+            flex: 1;
+            overflow-y: auto;
+            padding: 1rem 1.5rem;
+        }
+
+        .carrito-vacio {
+            text-align: center;
+            color: var(--cafe-medio);
+            font-style: italic;
+            margin-top: 2rem;
+        }
+
+        .carrito-item {
+            display: flex;
+            gap: 1rem;
+            padding: 1rem 0;
+            border-bottom: 1px solid var(--beige);
+        }
+
+        .carrito-item img {
+            width: 60px;
+            height: 60px;
+            object-fit: cover;
+            background: var(--beige);
+            flex-shrink: 0;
+        }
+
+        .carrito-item-info { flex: 1; }
+
+        .carrito-item-nombre {
+            font-size: 0.95rem;
+            color: var(--cafe-oscuro);
+            margin-bottom: 0.2rem;
+        }
+
+        .carrito-item-precio {
+            font-size: 0.85rem;
+            color: var(--ocre);
+            margin-bottom: 0.5rem;
+        }
+
+        .carrito-item-cantidad {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .carrito-item-cantidad button {
+            background: var(--beige);
+            border: none;
+            width: 26px;
+            height: 26px;
+            cursor: pointer;
+            font-size: 1rem;
+            color: var(--cafe-oscuro);
+            transition: background 0.2s;
+        }
+
+        .carrito-item-cantidad button:hover { background: var(--ocre); color: white; }
+
+        .carrito-item-cantidad span {
+            min-width: 20px;
+            text-align: center;
+            font-size: 0.95rem;
+        }
+
+        .btn-eliminar {
+            margin-left: auto;
+            background: none !important;
+            color: #c62828 !important;
+            font-size: 0.9rem !important;
+        }
+
+        .carrito-footer {
+            padding: 1.5rem;
+            border-top: 1px solid var(--beige);
+        }
+
+        .carrito-total {
+            display: flex;
+            justify-content: space-between;
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: var(--cafe-oscuro);
+            margin-bottom: 1rem;
+        }
+
+        .btn-checkout {
+            width: 100%;
+            padding: 1rem;
+            background: var(--cafe-oscuro);
+            color: var(--blanco-opaco);
+            border: none;
+            font-family: 'Georgia', serif;
+            font-size: 1rem;
+            letter-spacing: 2px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .btn-checkout:hover { background: var(--ocre); }
+
+        /* Estados de carga */
+        .loading-spinner {
+            text-align: center;
+            color: var(--cafe-medio);
+            font-style: italic;
+            padding: 3rem;
+            grid-column: 1 / -1;
+        }
+
+        .sin-productos {
+            text-align: center;
+            color: var(--cafe-medio);
+            font-style: italic;
+            padding: 3rem;
+            grid-column: 1 / -1;
+        }
+
+        @media (max-width: 480px) {
+            .carrito-panel { width: 100vw; }
+        }
+
+        /* ── RF1: Especificaciones técnicas ── */
+        .producto-specs {
+            display: flex;
+            gap: 0.4rem;
+            flex-wrap: wrap;
+            margin: 0.6rem 0;
+        }
+
+        .spec-badge {
+            font-size: 0.68rem;
+            background: #F5F2EC;
+            color: #5D3A1A;
+            padding: 0.25rem 0.6rem;
+            letter-spacing: 0.5px;
+            border: 1px solid #EDE8DF;
+        }
+
+        .producto-cat {
+            font-size: 0.6rem;
+            letter-spacing: 2.5px;
+            text-transform: uppercase;
+            color: #8BA040;
+            margin-bottom: 0.3rem;
+        }
+
+        /* ── RF2: Modal de personalización ── */
+        .modal-pers-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(67,40,24,0.6);
+            z-index: 2000;
+        }
+
+        .modal-pers-content {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            width: 92%;
+            max-width: 480px;
+            max-height: 90vh;
+            overflow-y: auto;
+            z-index: 2001;
+            box-shadow: 0 20px 60px rgba(67,40,24,0.3);
+        }
+
+        .pers-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.2rem 1.5rem;
+            border-bottom: 1px solid #EDE8DF;
+            position: sticky;
+            top: 0;
+            background: white;
+            z-index: 1;
+        }
+
+        .pers-header h3 {
+            font-family: Georgia, serif;
+            font-size: 1rem;
+            color: #432818;
+            letter-spacing: 1px;
+        }
+
+        .pers-close {
+            background: none;
+            border: none;
+            font-size: 1.2rem;
+            cursor: pointer;
+            color: #8B6347;
+            padding: 0.3rem;
+        }
+
+        .pers-body { padding: 1.5rem; }
+
+        .pers-producto {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            padding-bottom: 1.2rem;
+            border-bottom: 1px solid #EDE8DF;
+            margin-bottom: 1.2rem;
+        }
+
+        .pers-producto img {
+            width: 70px;
+            height: 70px;
+            object-fit: cover;
+            background: #ECE8DB;
+            flex-shrink: 0;
+        }
+
+        .pers-producto h4 {
+            font-family: Georgia, serif;
+            font-size: 1rem;
+            color: #432818;
+            margin-bottom: 0.3rem;
+        }
+
+        .pers-precio-base {
+            font-size: 1rem;
+            font-weight: 700;
+            color: #8BA040;
+            margin-bottom: 0.4rem;
+        }
+
+        .spec-badge-sm {
+            font-size: 0.62rem;
+            background: #F5F2EC;
+            color: #5D3A1A;
+            padding: 0.2rem 0.5rem;
+            margin-right: 0.3rem;
+            border: 1px solid #EDE8DF;
+        }
+
+        .pers-seccion {
+            margin-bottom: 1.5rem;
+        }
+
+        .pers-seccion h5 {
+            font-size: 0.72rem;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: #8BA040;
+            margin-bottom: 0.8rem;
+            font-weight: 600;
+        }
+
+        .pers-hint {
+            font-weight: 400;
+            text-transform: none;
+            letter-spacing: 0;
+            color: #8B6347;
+            font-size: 0.7rem;
+        }
+
+        .pers-opciones {
+            display: flex;
+            flex-direction: column;
+            gap: 0.4rem;
+        }
+
+        .pers-opcion {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            padding: 0.6rem 0.8rem;
+            border: 1px solid #EDE8DF;
+            cursor: pointer;
+            transition: border-color 0.2s, background 0.2s;
+            font-size: 0.85rem;
+            color: #432818;
+        }
+
+        .pers-opcion:hover {
+            border-color: #8BA040;
+            background: #F5F2EC;
+        }
+
+        .pers-opcion input {
+            accent-color: #8BA040;
+            width: 16px;
+            height: 16px;
+            cursor: pointer;
+        }
+
+        .pers-opcion-nombre { flex: 1; }
+
+        .pers-opcion-precio {
+            font-size: 0.78rem;
+            color: #8BA040;
+            font-weight: 600;
+        }
+
+        .pers-total {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 0;
+            border-top: 2px solid #432818;
+            margin-top: 1rem;
+            font-family: Georgia, serif;
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #432818;
+        }
+
+        .pers-btn-agregar {
+            width: 100%;
+            padding: 0.9rem;
+            background: #BC4749;
+            color: white;
+            border: none;
+            font-family: Georgia, serif;
+            font-size: 0.95rem;
+            letter-spacing: 2px;
+            cursor: pointer;
+            transition: background 0.2s;
+            margin-top: 0.8rem;
+        }
+
+        .pers-btn-agregar:hover { background: #432818; }
+
+        /* ── RF3: Personalización en carrito ── */
+        .carrito-pers {
+            display: block;
+            font-size: 0.72rem;
+            color: #8B6347;
+            margin-top: 0.2rem;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar">
+        <div class="container">
+            <div class="logo">
+                <a href="/">
+                <img src="/Fotos de Urakao Oficial/ISOTIPOPRINCIPAL color chocolate.png" alt="URAKAO Logo">
+                </a>
+            </div>
+            <ul class="nav-links">
+                <li><a href="/">Inicio</a></li>
+                <li><a href="/tienda" class="active">Tienda</a></li>
+            </ul>
+            <div class="nav-actions">
+                <span id="user-name" class="user-greeting"></span>
+                <button id="btn-carrito" class="btn-carrito" onclick="toggleCarrito()">
+                    🛒 <span id="carrito-count">0</span>
+                </button>
+                <button id="btn-logout" class="btn-nav" onclick="cerrarSesion()">Salir</button>
+            </div>
+        </div>
+    </nav>
+
+    <main class="tienda-main">
+        <div class="container">
+            <div class="tienda-header">
+                <p class="section-label">Catálogo</p>
+                <h1>Nuestros Productos</h1>
+            </div>
+
+            <!-- Grid de productos -->
+            <div id="productos-grid" class="productos-grid">
+                <div class="loading-spinner">Cargando productos...</div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Panel del carrito (sidebar) -->
+    <div id="carrito-overlay" class="carrito-overlay hidden" onclick="toggleCarrito()"></div>
+    <aside id="carrito-panel" class="carrito-panel hidden">
+        <div class="carrito-header">
+            <h3>Tu Carrito</h3>
+            <button onclick="toggleCarrito()" class="carrito-close">✕</button>
+        </div>
+        <div id="carrito-items" class="carrito-items">
+            <p class="carrito-vacio">Tu carrito está vacío</p>
+        </div>
+        <div class="carrito-footer">
+            <div class="carrito-total">
+                <span>Total:</span>
+                <span id="carrito-total">$0</span>
+            </div>
+            <button id="btn-checkout" class="btn-checkout" onclick="irACheckout()">
+                Proceder al pago
+            </button>
+        </div>
+    </aside>
+
+    <script type="module" src="/src/js/firebase.js"></script>
+    <script type="module" src="/src/js/tienda.js"></script>
+</body>
+</html>

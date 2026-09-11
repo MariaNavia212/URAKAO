@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>URAKAO — Actualizar productos</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Georgia', serif;
+            background: #ECE8DB;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 2rem;
+        }
+        .card {
+            background: white;
+            border: 1px solid #D9D3C7;
+            padding: 3rem;
+            max-width: 560px;
+            width: 100%;
+            text-align: center;
+        }
+        h1 { font-size: 1.5rem; color: #432818; letter-spacing: 3px; margin-bottom: 0.5rem; }
+        .sub { color: #5D3A1A; font-style: italic; margin-bottom: 2rem; font-size: 0.95rem; }
+        #log { margin-top: 1.5rem; font-size: 0.9rem; line-height: 2; text-align: left; }
+        .ok    { color: #2e7d32; }
+        .error { color: #c62828; }
+        .info  { color: #5D3A1A; }
+        a { color: #BC4749; }
+        button {
+            margin-top: 1.5rem;
+            padding: 0.8rem 2rem;
+            background: #BC4749;
+            color: white;
+            border: none;
+            font-family: 'Georgia', serif;
+            font-size: 1rem;
+            cursor: pointer;
+            letter-spacing: 1px;
+        }
+        button:hover { background: #432818; }
+        button:disabled { opacity: 0.5; cursor: not-allowed; }
+        .warning {
+            background: #fff8e1;
+            border-left: 3px solid #f9a825;
+            padding: 0.8rem 1rem;
+            font-size: 0.85rem;
+            color: #5D3A1A;
+            margin-bottom: 1.5rem;
+            text-align: left;
+        }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h1>URAKAO</h1>
+        <p class="sub">Actualizar catálogo de productos en Firestore</p>
+        <div class="warning">
+            ⚠️ Este script borra los productos actuales y carga el catálogo oficial con las fotos correctas. Solo úsalo una vez.
+        </div>
+        <button id="btn-seed">Actualizar productos</button>
+        <div id="log"></div>
+    </div>
+
+    <script type="module">
+        import { initializeApp }  from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+        import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc }
+            from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey:            "AIzaSyDjtxTIzWPNYdQQTHxNzKXf3DJ76nqHYhc",
+            authDomain:        "urakao.firebaseapp.com",
+            projectId:         "urakao",
+            storageBucket:     "urakao.firebasestorage.app",
+            messagingSenderId: "407610284432",
+            appId:             "1:407610284432:web:d0c267c2905058e866bb15"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db  = getFirestore(app);
+
+        // ── Catálogo oficial URAKAO ───────────────────────────────
+        const productos = [
+            {
+                nombre:          "Barra de Chocolate 100%",
+                descripcion:     "Chocolate puro al 100% de cacao. Sin azúcar, sin aditivos. Solo el sabor auténtico del cacao del Urabá en su expresión más pura. Para los amantes del cacao genuino.",
+                precio:          22000,
+                imagen:          "/Fotos de Urakao Oficial/Barra de chocolate p1.png",
+                imagenes:        [
+                    "/Fotos de Urakao Oficial/Barra de chocolate p1.png",
+                    "/Fotos de Urakao Oficial/Barra de chocolate p2.png",
+                    "/Fotos de Urakao Oficial/Tabletas de chocolate y bombones sobre mesa.png"
+                ],
+                disponible:      true,
+                categoria:       "Tabletas",
+                porcentajeCacao: 100,
+                origenGrano:     "Urabá, Antioquia"
+            },
+            {
+                nombre:          "Barra de Chocolate 75%",
+                descripcion:     "Equilibrio perfecto entre intensidad y dulzura. El 75% de cacao resalta las notas frutales y terrosas del Urabá. Ideal para disfrutar solo o en maridaje.",
+                precio:          20000,
+                imagen:          "/Fotos de Urakao Oficial/Barra de chocolate p2.png",
+                imagenes:        [
+                    "/Fotos de Urakao Oficial/Barra de chocolate p2.png",
+                    "/Fotos de Urakao Oficial/Barra de chocolate p1.png",
+                    "/Fotos de Urakao Oficial/Tabletas de chocolate y bombones sobre mesa.png"
+                ],
+                disponible:      true,
+                categoria:       "Tabletas",
+                porcentajeCacao: 75,
+                origenGrano:     "Urabá, Antioquia"
+            },
+            {
+                nombre:          "Barra de Chocolate 65%",
+                descripcion:     "Nuestra entrada al mundo del chocolate oscuro. El 65% de cacao ofrece notas dulces, frutales y una textura suave. Perfecto para todos los paladares.",
+                precio:          18000,
+                imagen:          "/Fotos de Urakao Oficial/Tabletas de chocolate y bombones sobre mesa.png",
+                imagenes:        [
+                    "/Fotos de Urakao Oficial/Tabletas de chocolate y bombones sobre mesa.png",
+                    "/Fotos de Urakao Oficial/Barra de chocolate p1.png",
+                    "/Fotos de Urakao Oficial/Barra de chocolate p2.png"
+                ],
+                disponible:      true,
+                categoria:       "Tabletas",
+                porcentajeCacao: 65,
+                origenGrano:     "Urabá, Antioquia"
+            },
+            {
+                nombre:          "Caja de Bombones",
+                descripcion:     "Una selección de bombones artesanales rellenos con ingredientes locales del Urabá. Cada pieza es elaborada a mano con chocolate de origen. Presentación ideal para regalo.",
+                precio:          35000,
+                imagen:          "/Fotos de Urakao Oficial/caja de chocolate cerrada p1.png",
+                imagenes:        [
+                    "/Fotos de Urakao Oficial/caja de chocolate cerrada p1.png",
+                    "/Fotos de Urakao Oficial/caja de chocolate con bombones p2.png",
+                    "/Fotos de Urakao Oficial/como se rellenan los bombones.png"
+                ],
+                disponible:      true,
+                categoria:       "Bombones",
+                porcentajeCacao: 55,
+                origenGrano:     "Urabá, Antioquia"
+            },
+            {
+                nombre:          "Cacao en Polvo",
+                descripcion:     "Cocoa pura obtenida del cacao del Urabá. Sin azúcar añadida, sin conservantes. Ideal para bebidas calientes y frías, postres y recetas. Conserva todos los antioxidantes del grano.",
+                precio:          15000,
+                imagen:          "/Fotos de Urakao Oficial/Chocolate en polvo.png",
+                imagenes:        [
+                    "/Fotos de Urakao Oficial/Chocolate en polvo.png",
+                    "/Fotos de Urakao Oficial/Cacao secandose en marquesina.png",
+                    "/Fotos de Urakao Oficial/Nuestro arbol de cacao.png"
+                ],
+                disponible:      true,
+                categoria:       "Bebidas",
+                porcentajeCacao: 100,
+                origenGrano:     "Urabá, Antioquia"
+            }
+        ];
+
+        const logEl = document.getElementById("log");
+        const btn   = document.getElementById("btn-seed");
+
+        function log(msg, tipo = "info") {
+            logEl.innerHTML += `<p class="${tipo}">${msg}</p>`;
+        }
+
+        btn.addEventListener("click", async () => {
+            btn.disabled = true;
+            logEl.innerHTML = "";
+            log("Conectando con Firestore...");
+
+            try {
+                // Borrar productos existentes
+                const snap = await getDocs(collection(db, "productos"));
+                if (!snap.empty) {
+                    log(`Eliminando ${snap.size} productos existentes...`);
+                    for (const d of snap.docs) {
+                        await deleteDoc(doc(db, "productos", d.id));
+                    }
+                    log("✓ Productos antiguos eliminados.", "ok");
+                }
+
+                // Cargar catálogo oficial
+                log("Cargando catálogo oficial...");
+                for (const p of productos) {
+                    await addDoc(collection(db, "productos"), p);
+                    log(`✓ ${p.nombre}`, "ok");
+                }
+
+                log(`<br>✅ Catálogo actualizado con ${productos.length} productos.`, "ok");
+                log(`<a href="/tienda">→ Ver la tienda</a>`, "ok");
+
+            } catch (err) {
+                log(`✗ Error: ${err.message}`, "error");
+                console.error(err);
+                btn.disabled = false;
+            }
+        });
+    </script>
+</body>
+</html>

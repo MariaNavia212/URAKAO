@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>URAKAO — Panel de Pruebas de Carga</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            /* Paleta oficial URAKAO — Manual de Marca */
+            --chocolate: #432818;
+            --cafe:      #5D3A1A;
+            --dorado:    #BC4749;
+            --marfil:    #F5F2EC;
+            --crema:     #ECE8DB;
+            --tierra:    #5D3A1A;
+            --verde:     #8BA040;
+            --amarillo:  #8BA040;
+            --rojo:      #BC4749;
+        }
+        body { font-family: system-ui, sans-serif; background: var(--marfil); color: var(--chocolate); min-height: 100vh; }
+        .header { background: var(--chocolate); padding: 1.5rem 2rem; color: var(--marfil); }
+        .header h1 { font-family: Georgia, serif; font-size: 1.5rem; letter-spacing: 3px; margin-bottom: 0.3rem; }
+        .header p { font-size: 0.8rem; color: var(--dorado); letter-spacing: 1px; }
+        .container { max-width: 1200px; margin: 0 auto; padding: 2rem; }
+
+        /* Config panel */
+        .config { background: white; padding: 2rem; border: 1px solid var(--crema); margin-bottom: 2rem; }
+        .config h2 { font-family: Georgia, serif; font-size: 1.2rem; margin-bottom: 1rem; color: var(--cafe); }
+        .config-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 1.5rem; }
+        .config-field label { display: block; font-size: 0.72rem; letter-spacing: 2px; text-transform: uppercase; color: var(--tierra); margin-bottom: 0.3rem; }
+        .config-field input, .config-field select { width: 100%; padding: 0.6rem; border: 1px solid var(--crema); font-size: 0.9rem; background: var(--marfil); }
+        .config-field input:focus { border-color: var(--dorado); outline: none; }
+
+        .btn-iniciar { background: var(--chocolate); color: white; border: none; padding: 0.8rem 2rem; font-size: 0.9rem; letter-spacing: 2px; cursor: pointer; transition: background 0.2s; }
+        .btn-iniciar:hover { background: var(--cafe); }
+        .btn-iniciar:disabled { opacity: 0.5; cursor: not-allowed; }
+        .btn-detener { background: var(--rojo); color: white; border: none; padding: 0.8rem 2rem; font-size: 0.9rem; letter-spacing: 2px; cursor: pointer; margin-left: 0.5rem; }
+
+        /* Resultados */
+        .resultados { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-bottom: 2rem; }
+        .metric-card { background: white; padding: 1.2rem; border-top: 3px solid var(--dorado); text-align: center; }
+        .metric-num { font-family: Georgia, serif; font-size: 2rem; font-weight: 700; color: var(--chocolate); }
+        .metric-lbl { font-size: 0.68rem; letter-spacing: 2px; text-transform: uppercase; color: var(--tierra); margin-top: 0.3rem; }
+
+        /* Log */
+        .log-section { background: white; border: 1px solid var(--crema); }
+        .log-header { padding: 1rem 1.5rem; border-bottom: 1px solid var(--crema); display: flex; justify-content: space-between; align-items: center; }
+        .log-header h3 { font-family: Georgia, serif; font-size: 1rem; color: var(--cafe); }
+        .log-body { padding: 1rem 1.5rem; max-height: 400px; overflow-y: auto; font-family: monospace; font-size: 0.82rem; line-height: 1.8; }
+        .log-entry { padding: 0.2rem 0; border-bottom: 1px solid var(--marfil); display: flex; gap: 1rem; }
+        .log-time { color: var(--tierra); min-width: 80px; }
+        .log-status { min-width: 50px; font-weight: 700; }
+        .log-ok { color: var(--verde); }
+        .log-warn { color: var(--amarillo); }
+        .log-err { color: var(--rojo); }
+        .log-url { color: var(--cafe); }
+        .log-ms { color: var(--dorado); min-width: 70px; text-align: right; }
+
+        /* Progress */
+        .progress-bar { height: 4px; background: var(--crema); margin-bottom: 2rem; overflow: hidden; }
+        .progress-fill { height: 100%; background: var(--dorado); width: 0%; transition: width 0.3s; }
+
+        /* Gráfico simple */
+        .chart-section { background: white; border: 1px solid var(--crema); padding: 1.5rem; margin-bottom: 2rem; }
+        .chart-section h3 { font-family: Georgia, serif; font-size: 1rem; color: var(--cafe); margin-bottom: 1rem; }
+        .chart { display: flex; align-items: flex-end; gap: 2px; height: 150px; padding-top: 1rem; }
+        .chart-bar { flex: 1; background: var(--dorado); min-width: 3px; transition: height 0.3s; border-radius: 2px 2px 0 0; }
+        .chart-bar.slow { background: var(--amarillo); }
+        .chart-bar.error { background: var(--rojo); }
+
+        @media (max-width: 768px) {
+            .resultados { grid-template-columns: 1fr 1fr; }
+            .config-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>URAKAO</h1>
+        <p>Panel de Pruebas de Balanceo de Cargas</p>
+    </div>
+
+    <div class="container">
+        <!-- Configuración -->
+        <div class="config">
+            <h2>Configuración de la prueba</h2>
+            <div class="config-grid">
+                <div class="config-field">
+                    <label>URL objetivo</label>
+                    <input type="text" id="cfg-url" value="https://urakao.web.app">
+                </div>
+                <div class="config-field">
+                    <label>Usuarios simultáneos</label>
+                    <input type="number" id="cfg-usuarios" value="10" min="1" max="100">
+                </div>
+                <div class="config-field">
+                    <label>Solicitudes por usuario</label>
+                    <input type="number" id="cfg-solicitudes" value="5" min="1" max="50">
+                </div>
+                <div class="config-field">
+                    <label>Intervalo (ms)</label>
+                    <input type="number" id="cfg-intervalo" value="200" min="50" max="5000">
+                </div>
+            </div>
+            <button class="btn-iniciar" id="btn-iniciar">▶ Iniciar Prueba de Carga</button>
+            <button class="btn-detener hidden" id="btn-detener">■ Detener</button>
+        </div>
+
+        <!-- Barra de progreso -->
+        <div class="progress-bar"><div class="progress-fill" id="progress"></div></div>
+
+        <!-- Métricas -->
+        <div class="resultados">
+            <div class="metric-card">
+                <div class="metric-num" id="m-total">0</div>
+                <div class="metric-lbl">Solicitudes enviadas</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-num" id="m-promedio">0 ms</div>
+                <div class="metric-lbl">Tiempo promedio</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-num" id="m-exito">0%</div>
+                <div class="metric-lbl">Tasa de éxito</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-num" id="m-rps">0</div>
+                <div class="metric-lbl">Req/segundo</div>
+            </div>
+        </div>
+
+        <!-- Gráfico -->
+        <div class="chart-section">
+            <h3>Tiempos de respuesta (ms)</h3>
+            <div class="chart" id="chart"></div>
+        </div>
+
+        <!-- Log -->
+        <div class="log-section">
+            <div class="log-header">
+                <h3>Log de solicitudes</h3>
+                <button onclick="document.getElementById('log').innerHTML=''" style="background:none;border:1px solid var(--crema);padding:0.3rem 0.8rem;cursor:pointer;font-size:0.75rem;color:var(--tierra)">Limpiar</button>
+            </div>
+            <div class="log-body" id="log">
+                <p style="color:var(--tierra);font-style:italic">Configura los parámetros y haz clic en "Iniciar Prueba de Carga"</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const endpoints = [
+            { path: "/", nombre: "Inicio" },
+            { path: "/login", nombre: "Login" },
+            { path: "/tienda", nombre: "Tienda" },
+            { path: "/checkout", nombre: "Checkout" }
+        ];
+
+        let corriendo = false;
+        let resultados = [];
+        let tiempoInicio = 0;
+
+        const btnIniciar = document.getElementById("btn-iniciar");
+        const btnDetener = document.getElementById("btn-detener");
+
+        btnIniciar.addEventListener("click", iniciarPrueba);
+        btnDetener.addEventListener("click", () => { corriendo = false; });
+
+        async function iniciarPrueba() {
+            const baseUrl      = document.getElementById("cfg-url").value.trim();
+            const usuarios     = parseInt(document.getElementById("cfg-usuarios").value);
+            const solicitudes  = parseInt(document.getElementById("cfg-solicitudes").value);
+            const intervalo    = parseInt(document.getElementById("cfg-intervalo").value);
+            const totalReqs    = usuarios * solicitudes;
+
+            corriendo   = true;
+            resultados  = [];
+            tiempoInicio = Date.now();
+
+            btnIniciar.disabled = true;
+            btnDetener.classList.remove("hidden");
+            document.getElementById("log").innerHTML = "";
+            document.getElementById("chart").innerHTML = "";
+            document.getElementById("progress").style.width = "0%";
+
+            agregarLog("info", "—", `Iniciando prueba: ${usuarios} usuarios × ${solicitudes} solicitudes = ${totalReqs} requests`);
+            agregarLog("info", "—", `URL base: ${baseUrl} | Intervalo: ${intervalo}ms`);
+
+            let enviadas = 0;
+
+            for (let u = 0; u < usuarios && corriendo; u++) {
+                for (let s = 0; s < solicitudes && corriendo; s++) {
+                    const ep = endpoints[Math.floor(Math.random() * endpoints.length)];
+                    const url = baseUrl + ep.path;
+
+                    enviarSolicitud(url, ep.nombre);
+                    enviadas++;
+
+                    document.getElementById("progress").style.width =
+                        Math.round((enviadas / totalReqs) * 100) + "%";
+
+                    await sleep(intervalo);
+                }
+            }
+
+            // Esperar que terminen las últimas solicitudes
+            await sleep(2000);
+            finalizarPrueba();
+        }
+
+        async function enviarSolicitud(url, nombre) {
+            const inicio = performance.now();
+            try {
+                const res = await fetch(url, { mode: "no-cors", cache: "no-store" });
+                const tiempo = Math.round(performance.now() - inicio);
+                resultados.push({ url, nombre, tiempo, ok: true });
+                agregarLog("ok", tiempo + "ms", `${nombre} → ${url}`);
+                agregarBarra(tiempo, true);
+                actualizarMetricas();
+            } catch (err) {
+                const tiempo = Math.round(performance.now() - inicio);
+                resultados.push({ url, nombre, tiempo, ok: false });
+                agregarLog("err", "ERROR", `${nombre} → ${url} (${err.message})`);
+                agregarBarra(tiempo, false);
+                actualizarMetricas();
+            }
+        }
+
+        function actualizarMetricas() {
+            const total    = resultados.length;
+            const exitosas = resultados.filter(r => r.ok).length;
+            const tiempos  = resultados.map(r => r.tiempo);
+            const promedio = total > 0 ? Math.round(tiempos.reduce((a, b) => a + b, 0) / total) : 0;
+            const duracion = (Date.now() - tiempoInicio) / 1000;
+            const rps      = duracion > 0 ? (total / duracion).toFixed(1) : 0;
+
+            document.getElementById("m-total").textContent    = total;
+            document.getElementById("m-promedio").textContent = promedio + " ms";
+            document.getElementById("m-exito").textContent    = total > 0 ? Math.round((exitosas / total) * 100) + "%" : "0%";
+            document.getElementById("m-rps").textContent      = rps;
+        }
+
+        function finalizarPrueba() {
+            corriendo = false;
+            btnIniciar.disabled = false;
+            btnDetener.classList.add("hidden");
+            document.getElementById("progress").style.width = "100%";
+
+            const total    = resultados.length;
+            const exitosas = resultados.filter(r => r.ok).length;
+            const tiempos  = resultados.filter(r => r.ok).map(r => r.tiempo);
+            const promedio = tiempos.length > 0 ? Math.round(tiempos.reduce((a, b) => a + b, 0) / tiempos.length) : 0;
+            const maximo   = tiempos.length > 0 ? Math.max(...tiempos) : 0;
+            const minimo   = tiempos.length > 0 ? Math.min(...tiempos) : 0;
+
+            agregarLog("info", "—", "═══════════════════════════════════════");
+            agregarLog("info", "—", `RESULTADO FINAL`);
+            agregarLog("info", "—", `Total solicitudes: ${total}`);
+            agregarLog("info", "—", `Exitosas: ${exitosas} | Fallidas: ${total - exitosas}`);
+            agregarLog("info", "—", `Tiempo promedio: ${promedio}ms | Mín: ${minimo}ms | Máx: ${maximo}ms`);
+            agregarLog("info", "—", `Tasa de éxito: ${Math.round((exitosas/total)*100)}%`);
+
+            if (promedio < 300) {
+                agregarLog("ok", "✓", "RENDIMIENTO EXCELENTE — La aplicación responde rápidamente bajo carga");
+            } else if (promedio < 800) {
+                agregarLog("warn", "⚠", "RENDIMIENTO ACEPTABLE — Monitorear en picos de tráfico");
+            } else {
+                agregarLog("err", "✗", "RENDIMIENTO BAJO — Se recomienda optimización");
+            }
+        }
+
+        function agregarLog(tipo, status, msg) {
+            const log = document.getElementById("log");
+            const claseStatus = tipo === "ok" ? "log-ok" : tipo === "err" ? "log-err" : "log-warn";
+            const hora = new Date().toLocaleTimeString("es-CO", { hour12: false });
+            log.innerHTML += `<div class="log-entry"><span class="log-time">${hora}</span><span class="log-status ${claseStatus}">${status}</span><span class="log-url">${msg}</span></div>`;
+            log.scrollTop = log.scrollHeight;
+        }
+
+        function agregarBarra(tiempo, ok) {
+            const chart = document.getElementById("chart");
+            const maxH = 150;
+            const h = Math.min(Math.max((tiempo / 1000) * maxH, 4), maxH);
+            const clase = !ok ? "error" : tiempo > 500 ? "slow" : "";
+            chart.innerHTML += `<div class="chart-bar ${clase}" style="height:${h}px" title="${tiempo}ms"></div>`;
+        }
+
+        function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+    </script>
+</body>
+</html>
