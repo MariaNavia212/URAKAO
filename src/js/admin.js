@@ -2,7 +2,7 @@
 //  URAKAO — Panel de Administración
 // ============================================================
 
-import { auth, db, storage } from "./firebase.js";
+import { auth, db } from "./firebase.js";
 import {
     onAuthStateChanged,
     signOut
@@ -12,9 +12,10 @@ import {
     updateDoc, deleteDoc, addDoc,
     query, orderBy
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-import {
-    ref, uploadBytesResumable, getDownloadURL
-} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
+
+// ── Cloudinary config ─────────────────────────────────────────
+const CLOUDINARY_CLOUD  = "dkouwikge";
+const CLOUDINARY_PRESET = "ml_defauld";
 
 // ── Emails con acceso admin ───────────────────────────────────
 const ADMINS = [
@@ -503,29 +504,40 @@ function resetUploadArea() {
     document.getElementById("progress-text").textContent = "Subiendo...";
 }
 
-/** Sube el archivo a Firebase Storage y devuelve la URL */
+/** Sube el archivo a Cloudinary y devuelve la URL pública */
 async function subirImagen(file) {
+    const formData = new FormData();
+    formData.append("file",           file);
+    formData.append("upload_preset",  CLOUDINARY_PRESET);
+    formData.append("folder",         "urakao/productos");
+
+    // Mostrar barra de progreso
+    document.getElementById("upload-preview").classList.add("hidden");
+    document.getElementById("upload-progress").classList.remove("hidden");
+
     return new Promise((resolve, reject) => {
-        const nombreArchivo = `productos/${Date.now()}_${file.name.replace(/\s+/g, "_")}`;
-        const storageRef    = ref(storage, nombreArchivo);
-        const uploadTask    = uploadBytesResumable(storageRef, file);
+        const xhr = new XMLHttpRequest();
+        xhr.open("POST", `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD}/image/upload`);
 
-        // Mostrar barra de progreso
-        document.getElementById("upload-preview").classList.add("hidden");
-        document.getElementById("upload-progress").classList.remove("hidden");
-
-        uploadTask.on("state_changed",
-            snapshot => {
-                const pct = Math.round((snapshot.bytesTransferred / snapshot.totalBytes) * 100);
-                document.getElementById("progress-fill").style.width = `${pct}%`;
-                document.getElementById("progress-text").textContent = `Subiendo... ${pct}%`;
-            },
-            err => reject(err),
-            async () => {
-                const url = await getDownloadURL(uploadTask.snapshot.ref);
-                resolve(url);
+        xhr.upload.addEventListener("progress", e => {
+            if (e.lengthComputable) {
+                const pct = Math.round((e.loaded / e.total) * 100);
+                document.getElementById("progress-fill").style.width  = `${pct}%`;
+                document.getElementById("progress-text").textContent  = `Subiendo... ${pct}%`;
             }
-        );
+        });
+
+        xhr.addEventListener("load", () => {
+            if (xhr.status === 200) {
+                const res = JSON.parse(xhr.responseText);
+                resolve(res.secure_url);
+            } else {
+                reject(new Error("Error al subir imagen a Cloudinary"));
+            }
+        });
+
+        xhr.addEventListener("error", () => reject(new Error("Error de red al subir imagen")));
+        xhr.send(formData);
     });
 }
 
