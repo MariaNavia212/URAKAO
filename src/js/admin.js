@@ -2,7 +2,7 @@
 //  URAKAO — Panel de Administración
 // ============================================================
 
-import { auth, db } from "./firebase.js";
+import { auth, db, storage } from "./firebase.js";
 import {
     onAuthStateChanged,
     signOut
@@ -12,10 +12,9 @@ import {
     updateDoc, deleteDoc, addDoc,
     query, orderBy
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-
-// ── Cloudinary ────────────────────────────────────────────────
-const CLOUDINARY_CLOUD  = "dkouwikge";
-const CLOUDINARY_PRESET = "ml_defauld";
+import {
+    ref, uploadBytesResumable, getDownloadURL
+} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
 
 // ── Emails con acceso admin ───────────────────────────────────
 const ADMINS = [
@@ -136,7 +135,7 @@ function actualizarStats() {
     document.getElementById("stat-ingresos").textContent   = `$ ${ing.toLocaleString("es-CO")}`;
 }
 
-// ── Filtros por estado ────────────────────────────────────────
+// Filtros
 document.querySelectorAll(".filtro-btn").forEach(btn => {
     btn.addEventListener("click", () => {
         document.querySelectorAll(".filtro-btn").forEach(b => b.classList.remove("active"));
@@ -458,33 +457,30 @@ function resetUploadArea() {
     document.getElementById("progress-text").textContent = "Subiendo...";
 }
 
-/** Sube el archivo a Cloudinary y devuelve la URL pública */
+/** Sube el archivo a Firebase Storage y devuelve la URL */
 async function subirImagen(file) {
-    const formData = new FormData();
-    formData.append("file",          file);
-    formData.append("upload_preset", CLOUDINARY_PRESET);
-    formData.append("folder",        "urakao/productos");
+    return new Promise((resolve, reject) => {
+        const nombreArchivo = `productos/${Date.now()}_${file.name.replace(/\s+/g, "_")}`;
+        const storageRef    = ref(storage, nombreArchivo);
+        const uploadTask    = uploadBytesResumable(storageRef, file);
 
-    document.getElementById("upload-preview").classList.add("hidden");
-    document.getElementById("upload-progress").classList.remove("hidden");
-    document.getElementById("progress-fill").style.width = "50%";
-    document.getElementById("progress-text").textContent = "Subiendo imagen...";
+        // Mostrar barra de progreso
+        document.getElementById("upload-preview").classList.add("hidden");
+        document.getElementById("upload-progress").classList.remove("hidden");
 
-    const res = await fetch(
-        `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD}/image/upload`,
-        { method: "POST", body: formData }
-    );
-
-    if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        throw new Error(err?.error?.message || `Error ${res.status}`);
-    }
-
-    document.getElementById("progress-fill").style.width = "100%";
-    document.getElementById("progress-text").textContent = "¡Listo!";
-
-    const data = await res.json();
-    return data.secure_url;
+        uploadTask.on("state_changed",
+            snapshot => {
+                const pct = Math.round((snapshot.bytesTransferred / snapshot.totalBytes) * 100);
+                document.getElementById("progress-fill").style.width = `${pct}%`;
+                document.getElementById("progress-text").textContent = `Subiendo... ${pct}%`;
+            },
+            err => reject(err),
+            async () => {
+                const url = await getDownloadURL(uploadTask.snapshot.ref);
+                resolve(url);
+            }
+        );
+    });
 }
 
 // ── Submit del formulario ─────────────────────────────────────
