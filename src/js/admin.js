@@ -65,8 +65,46 @@ function formatFecha(ts, estilo = "short") {
     });
 }
 
-/** Cierra todos los modales */
-function cerrarModales() {
+// ════════════════════════════════════════════════════════════
+//  MODAL DE CONFIRMACIÓN
+// ════════════════════════════════════════════════════════════
+
+/**
+ * Muestra un modal de confirmación personalizado.
+ * @param {string} titulo  - Título del modal
+ * @param {string} mensaje - Descripción de la acción
+ * @returns {Promise<boolean>} true si el usuario confirma, false si cancela
+ */
+function confirmar(titulo, mensaje) {
+    return new Promise(resolve => {
+        document.getElementById("confirm-titulo").textContent  = titulo;
+        document.getElementById("confirm-mensaje").textContent = mensaje;
+
+        const overlay = document.getElementById("modal-confirm-overlay");
+        const modal   = document.getElementById("modal-confirm");
+        overlay.classList.remove("hidden");
+        modal.classList.remove("hidden");
+
+        const btnOk     = document.getElementById("confirm-btn-ok");
+        const btnCancel = document.getElementById("confirm-btn-cancelar");
+
+        function cerrar(resultado) {
+            overlay.classList.add("hidden");
+            modal.classList.add("hidden");
+            btnOk.removeEventListener("click", onOk);
+            btnCancel.removeEventListener("click", onCancel);
+            resolve(resultado);
+        }
+
+        const onOk     = () => cerrar(true);
+        const onCancel = () => cerrar(false);
+
+        btnOk.addEventListener("click",     onOk);
+        btnCancel.addEventListener("click", onCancel);
+    });
+}
+
+
     document.getElementById("modal-overlay").classList.add("hidden");
     document.getElementById("modal-pedido").classList.add("hidden");
     document.getElementById("modal-producto").classList.add("hidden");
@@ -279,7 +317,11 @@ async function cambiarEstado(id, nuevoEstado) {
 async function eliminarPedido(id) {
     const p = todosPedidos.find(x => x.id === id);
     const nombre = p?.domicilio?.nombre || p?.usuarioEmail || "este pedido";
-    if (!confirm(`¿Eliminar el pedido de "${nombre}"?\nEsta acción no se puede deshacer.`)) return;
+    const ok = await confirmar(
+        "Eliminar pedido",
+        `¿Segura que quieres eliminar el pedido de "${nombre}"? Esta acción no se puede deshacer.`
+    );
+    if (!ok) return;
     try {
         await deleteDoc(doc(db, "pedidos", id));
         todosPedidos = todosPedidos.filter(x => x.id !== id);
@@ -364,7 +406,11 @@ function renderProductos(lista) {
 
 async function eliminarProducto(id) {
     const p = todosProductos.find(x => x.id === id);
-    if (!confirm(`¿Eliminar "${p?.nombre || "este producto"}"?\nEsta acción no se puede deshacer.`)) return;
+    const ok = await confirmar(
+        "Eliminar producto",
+        `¿Segura que quieres eliminar "${p?.nombre || "este producto"}"? Esta acción no se puede deshacer.`
+    );
+    if (!ok) return;
     try {
         await deleteDoc(doc(db, "productos", id));
         todosProductos = todosProductos.filter(x => x.id !== id);

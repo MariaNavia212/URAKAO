@@ -169,6 +169,20 @@
     <!-- ══ TOAST ═══════════════════════════════════════════════ -->
     <div id="toast-container" class="toast-container" aria-live="polite"></div>
 
+    <!-- ══ MODAL CONFIRMACIÓN ══════════════════════════════════ -->
+    <div id="modal-confirm-overlay" class="modal-overlay hidden"></div>
+    <div id="modal-confirm" class="modal modal-confirm hidden" role="alertdialog" aria-modal="true" aria-labelledby="confirm-titulo">
+        <div class="modal-confirm-body">
+            <div class="confirm-icono">⚠</div>
+            <h3 id="confirm-titulo"></h3>
+            <p id="confirm-mensaje"></p>
+            <div class="confirm-actions">
+                <button class="btn-cancelar-form" id="confirm-btn-cancelar">Cancelar</button>
+                <button class="btn-confirm-eliminar" id="confirm-btn-ok">Eliminar</button>
+            </div>
+        </div>
+    </div>
+
     <!-- ══ SCRIPTS ═════════════════════════════════════════════ -->
     <script type="module" src="/src/js/admin.js"></script>
 </body>
