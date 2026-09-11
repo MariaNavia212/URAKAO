@@ -2,74 +2,84 @@
 //  URAKAO — Panel de Administración
 // ============================================================
 
-import { auth, db, storage } from "./firebase.js";
+import { auth, db } from "./firebase.js";
 import {
-    onAuthStateChanged,
-    signOut
+    onAuthStateChanged, signOut
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 import {
     collection, getDocs, doc,
     updateDoc, deleteDoc, addDoc,
     query, orderBy
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-import {
-    ref, uploadBytesResumable, getDownloadURL
-} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
 
-// ── Emails con acceso admin ───────────────────────────────────
+// ── Acceso admin ──────────────────────────────────────────────
 const ADMINS = [
     "maria.navia212@pascualbravo.edu.co",
     "naviajimenezalejandra04@gmail.com"
 ];
 
-// ── Estado de la app ──────────────────────────────────────────
-let todosPedidos  = [];
+// ── Estado ────────────────────────────────────────────────────
+let todosPedidos   = [];
 let todosProductos = [];
-let filtroActual  = "todos";
+let filtroActual   = "todos";
 
 // ════════════════════════════════════════════════════════════
 //  UTILIDADES
 // ════════════════════════════════════════════════════════════
 
-/** Muestra una notificación toast */
-function toast(mensaje, tipo = "ok") {
-    const container = document.getElementById("toast-container");
+function toast(msg, tipo = "ok") {
+    const c  = document.getElementById("toast-container");
     const el = document.createElement("div");
     el.className = `toast toast-${tipo}`;
-    const iconos = { ok: "✓", error: "✕", info: "ℹ" };
-    el.innerHTML = `<span>${iconos[tipo] || "ℹ"}</span><span>${mensaje}</span>`;
-    container.appendChild(el);
+    el.textContent = msg;
+    c.appendChild(el);
     setTimeout(() => {
         el.classList.add("toast-out");
-        el.addEventListener("animationend", () => el.remove());
-    }, 3500);
+        el.addEventListener("animationend", () => el.remove(), { once: true });
+    }, 3200);
 }
 
-/** Devuelve la clase CSS del badge según estado */
 function badgeClass(estado) {
-    const mapa = {
+    return {
         "pendiente":  "badge-pendiente",
         "en camino":  "badge-en-camino",
         "entregado":  "badge-entregado",
         "cancelado":  "badge-cancelado"
-    };
-    return mapa[estado] ?? "badge-pendiente";
+    }[estado] ?? "badge-pendiente";
 }
 
-/** Formatea fecha desde Firestore Timestamp */
 function formatFecha(ts, estilo = "short") {
     if (!ts?.toDate) return "—";
-    return ts.toDate().toLocaleString("es-CO", {
-        dateStyle: estilo,
-        timeStyle: "short"
-    });
+    return ts.toDate().toLocaleString("es-CO", { dateStyle: estilo, timeStyle: "short" });
 }
 
-/** Cierra todos los modales */
 function cerrarModales() {
-    document.getElementById("modal-overlay").classList.add("hidden");
-    document.getElementById("modal-pedido").classList.add("hidden");
-    document.getElementById("modal-producto").classList.add("hidden");
+    ["modal-overlay", "modal-pedido", "modal-producto", "modal-confirm-overlay", "modal-confirm"]
+        .forEach(id => document.getElementById(id)?.classList.add("hidden"));
+}
+
+function confirmar(titulo, mensaje) {
+    return new Promise(resolve => {
+        document.getElementById("confirm-titulo").textContent  = titulo;
+        document.getElementById("confirm-mensaje").textContent = mensaje;
+        document.getElementById("modal-confirm-overlay").classList.remove("hidden");
+        document.getElementById("modal-confirm").classList.remove("hidden");
+
+        const ok     = document.getElementById("confirm-btn-ok");
+        const cancel = document.getElementById("confirm-btn-cancelar");
+
+        function cerrar(res) {
+            document.getElementById("modal-confirm-overlay").classList.add("hidden");
+            document.getElementById("modal-confirm").classList.add("hidden");
+            ok.removeEventListener("click", onOk);
+            cancel.removeEventListener("click", onCancel);
+            resolve(res);
+        }
+        const onOk     = () => cerrar(true);
+        const onCancel = () => cerrar(false);
+        ok.addEventListener("click",     onOk,     { once: true });
+        cancel.addEventListener("click", onCancel, { once: true });
+    });
 }
 
 // ════════════════════════════════════════════════════════════
@@ -77,9 +87,8 @@ function cerrarModales() {
 // ════════════════════════════════════════════════════════════
 
 onAuthStateChanged(auth, user => {
-    if (!user)                     { window.location.href = "/login"; return; }
-    if (!ADMINS.includes(user.email)) { window.location.href = "/";  return; }
-
+    if (!user)                        { window.location.href = "/login"; return; }
+    if (!ADMINS.includes(user.email)) { window.location.href = "/";     return; }
     document.getElementById("admin-email").textContent = user.displayName || user.email;
     cargarPedidos();
     cargarProductos();
@@ -110,15 +119,13 @@ document.querySelectorAll(".tab-btn").forEach(btn => {
 
 async function cargarPedidos() {
     try {
-        const snap = await getDocs(
-            query(collection(db, "pedidos"), orderBy("creadoEn", "desc"))
-        );
+        const snap = await getDocs(query(collection(db, "pedidos"), orderBy("creadoEn", "desc")));
         todosPedidos = snap.docs.map(d => ({ id: d.id, ...d.data() }));
         actualizarStats();
         renderPedidos(todosPedidos);
     } catch (err) {
         document.getElementById("pedidos-grid").innerHTML =
-            `<p class="msg-centro" style="color:#c62828">Error al cargar pedidos: ${err.message}</p>`;
+            `<p class="msg-centro" style="color:#c62828">Error: ${err.message}</p>`;
     }
 }
 
@@ -128,14 +135,12 @@ function actualizarStats() {
     const ing  = todosPedidos
         .filter(p => p.estado !== "cancelado")
         .reduce((s, p) => s + (p.total || 0), 0);
-
     document.getElementById("stat-total").textContent      = todosPedidos.length;
     document.getElementById("stat-pendientes").textContent = pend;
     document.getElementById("stat-entregados").textContent = entr;
     document.getElementById("stat-ingresos").textContent   = `$ ${ing.toLocaleString("es-CO")}`;
 }
 
-// Filtros
 document.querySelectorAll(".filtro-btn").forEach(btn => {
     btn.addEventListener("click", () => {
         document.querySelectorAll(".filtro-btn").forEach(b => b.classList.remove("active"));
@@ -150,22 +155,19 @@ document.querySelectorAll(".filtro-btn").forEach(btn => {
 
 function renderPedidos(lista) {
     const grid = document.getElementById("pedidos-grid");
-
     if (!lista.length) {
-        grid.innerHTML = `<p class="msg-centro">No hay pedidos en esta categoría.</p>`;
+        grid.innerHTML = `<p class="msg-centro">No hay pedidos aquí.</p>`;
         return;
     }
-
     grid.innerHTML = lista.map(p => {
         const estado = p.estado || "pendiente";
         const prods  = (p.productos || []).map(i => `${i.nombre} ×${i.cantidad}`).join(" · ");
         return `
-        <article class="pedido-card" data-id="${p.id}" tabindex="0" role="button"
-                 aria-label="Ver pedido de ${p.domicilio?.nombre || p.usuarioEmail}">
+        <article class="pedido-card" data-id="${p.id}" tabindex="0" role="button">
             <div class="pc-header">
                 <div>
                     <p class="pc-nombre">${p.domicilio?.nombre || p.usuarioEmail}</p>
-                    <p class="pc-contacto">📞 ${p.domicilio?.telefono || "—"} &nbsp;·&nbsp; ✉️ ${p.usuarioEmail}</p>
+                    <p class="pc-contacto">📞 ${p.domicilio?.telefono || "—"} · ${p.usuarioEmail}</p>
                 </div>
                 <span class="badge ${badgeClass(estado)}">${estado}</span>
             </div>
@@ -181,19 +183,16 @@ function renderPedidos(lista) {
     }).join("");
 
     grid.querySelectorAll(".pedido-card").forEach(card => {
-        const abrir = () => abrirModalPedido(card.dataset.id);
-        card.addEventListener("click", abrir);
-        card.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") abrir(); });
+        card.addEventListener("click", () => abrirModalPedido(card.dataset.id));
     });
 }
 
 function abrirModalPedido(id) {
     const p = todosPedidos.find(x => x.id === id);
     if (!p) return;
-
-    const tel    = (p.domicilio?.telefono || "").replace(/\s/g, "");
-    const waMsg  = encodeURIComponent(`Hola ${p.domicilio?.nombre || ""}, tu pedido URAKAO está en camino 🍫`);
-    const estado = p.estado || "pendiente";
+    const tel   = (p.domicilio?.telefono || "").replace(/\s/g, "");
+    const waMsg = encodeURIComponent(`Hola ${p.domicilio?.nombre || ""}, tu pedido URAKAO está en camino 🍫`);
+    const est   = p.estado || "pendiente";
 
     const prodsHtml = (p.productos || []).map(i => `
         <div class="prod-row">
@@ -201,21 +200,18 @@ function abrirModalPedido(id) {
             <span>$ ${Number(i.precio * i.cantidad).toLocaleString("es-CO")}</span>
         </div>`).join("");
 
-    document.getElementById("modal-pedido-titulo").textContent =
-        p.domicilio?.nombre || p.usuarioEmail;
-
+    document.getElementById("modal-pedido-titulo").textContent = p.domicilio?.nombre || p.usuarioEmail;
     document.getElementById("modal-pedido-body").innerHTML = `
         <div class="detalle-bloque">
             <p class="detalle-titulo">Cliente</p>
             <div class="detalle-row"><strong>Nombre</strong><span>${p.domicilio?.nombre || "—"}</span></div>
             <div class="detalle-row"><strong>Correo</strong><span>${p.usuarioEmail}</span></div>
             <div class="detalle-row"><strong>Teléfono</strong><span>${p.domicilio?.telefono || "—"}</span></div>
-            <div style="margin-top:0.8rem">
+            <div style="margin-top:.8rem">
                 <a href="tel:${tel}" class="btn-tel">📞 Llamar</a>
                 <a href="https://wa.me/57${tel}?text=${waMsg}" target="_blank" rel="noopener" class="btn-wa">💬 WhatsApp</a>
             </div>
         </div>
-
         <div class="detalle-bloque">
             <p class="detalle-titulo">Entrega</p>
             <div class="detalle-row"><strong>Dirección</strong><span>${p.domicilio?.direccion || "—"}</span></div>
@@ -224,36 +220,26 @@ function abrirModalPedido(id) {
             <div class="detalle-row"><strong>Pago</strong><span>${p.domicilio?.metodoPago || "—"}</span></div>
             <div class="detalle-row"><strong>Fecha</strong><span>${formatFecha(p.creadoEn, "long")}</span></div>
         </div>
-
         <div class="detalle-bloque">
             <p class="detalle-titulo">Productos</p>
             ${prodsHtml}
-            <div class="prod-total">
-                <span>Total</span>
-                <span>$ ${Number(p.total || 0).toLocaleString("es-CO")}</span>
-            </div>
+            <div class="prod-total"><span>Total</span><span>$ ${Number(p.total || 0).toLocaleString("es-CO")}</span></div>
         </div>
-
         <div class="detalle-bloque">
             <p class="detalle-titulo">Estado del pedido</p>
             <div class="estado-btns">
-                <button class="btn-estado ${estado === 'pendiente'  ? 'activo' : ''}" data-nuevo="pendiente">Pendiente</button>
-                <button class="btn-estado ${estado === 'en camino'  ? 'activo' : ''}" data-nuevo="en camino">En camino</button>
-                <button class="btn-estado ${estado === 'entregado'  ? 'activo' : ''}" data-nuevo="entregado">Entregado</button>
-                <button class="btn-estado btn-cancelar ${estado === 'cancelado' ? 'activo' : ''}" data-nuevo="cancelado">Cancelado</button>
+                <button class="btn-estado ${est==="pendiente" ?"activo":""}" data-nuevo="pendiente">Pendiente</button>
+                <button class="btn-estado ${est==="en camino" ?"activo":""}" data-nuevo="en camino">En camino</button>
+                <button class="btn-estado ${est==="entregado" ?"activo":""}" data-nuevo="entregado">Entregado</button>
+                <button class="btn-estado btn-cancelar ${est==="cancelado"?"activo":""}" data-nuevo="cancelado">Cancelado</button>
             </div>
-            <button class="btn-eliminar-pedido" data-id="${id}">🗑 Eliminar pedido</button>
-        </div>
-    `;
+            <button class="btn-eliminar-pedido">🗑 Eliminar pedido</button>
+        </div>`;
 
-    // Eventos botones de estado
-    document.querySelectorAll(".btn-estado").forEach(btn => {
-        btn.addEventListener("click", () => cambiarEstado(id, btn.dataset.nuevo));
-    });
-
-    document.querySelector(".btn-eliminar-pedido").addEventListener("click", () => {
-        eliminarPedido(id);
-    });
+    document.querySelectorAll(".btn-estado").forEach(btn =>
+        btn.addEventListener("click", () => cambiarEstado(id, btn.dataset.nuevo)));
+    document.querySelector(".btn-eliminar-pedido")
+        .addEventListener("click", () => eliminarPedido(id));
 
     document.getElementById("modal-overlay").classList.remove("hidden");
     document.getElementById("modal-pedido").classList.remove("hidden");
@@ -270,29 +256,23 @@ async function cambiarEstado(id, nuevoEstado) {
             ? todosPedidos
             : todosPedidos.filter(p => p.estado === filtroActual);
         renderPedidos(lista);
-        toast(`Estado actualizado: ${nuevoEstado}`, "ok");
-    } catch (err) {
-        toast("Error al cambiar estado: " + err.message, "error");
-    }
+        toast(`Estado: ${nuevoEstado}`, "ok");
+    } catch (err) { toast("Error: " + err.message, "error"); }
 }
 
 async function eliminarPedido(id) {
-    const p = todosPedidos.find(x => x.id === id);
-    const nombre = p?.domicilio?.nombre || p?.usuarioEmail || "este pedido";
-    if (!confirm(`¿Eliminar el pedido de "${nombre}"?\nEsta acción no se puede deshacer.`)) return;
+    const p    = todosPedidos.find(x => x.id === id);
+    const ok   = await confirmar("Eliminar pedido",
+        `¿Eliminar el pedido de "${p?.domicilio?.nombre || p?.usuarioEmail}"? No se puede deshacer.`);
+    if (!ok) return;
     try {
         await deleteDoc(doc(db, "pedidos", id));
         todosPedidos = todosPedidos.filter(x => x.id !== id);
         actualizarStats();
         cerrarModales();
-        const lista = filtroActual === "todos"
-            ? todosPedidos
-            : todosPedidos.filter(p => p.estado === filtroActual);
-        renderPedidos(lista);
+        renderPedidos(filtroActual === "todos" ? todosPedidos : todosPedidos.filter(p => p.estado === filtroActual));
         toast("Pedido eliminado", "ok");
-    } catch (err) {
-        toast("Error al eliminar: " + err.message, "error");
-    }
+    } catch (err) { toast("Error: " + err.message, "error"); }
 }
 
 // ════════════════════════════════════════════════════════════
@@ -301,43 +281,33 @@ async function eliminarPedido(id) {
 
 async function cargarProductos() {
     try {
-        const snap = await getDocs(query(collection(db, "productos"), orderBy("nombre")));
+        const snap = await getDocs(collection(db, "productos"));
         todosProductos = snap.docs.map(d => ({ id: d.id, ...d.data() }));
         renderProductos(todosProductos);
-    } catch {
-        // Fallback sin ordenación si no hay índice
-        try {
-            const snap2 = await getDocs(collection(db, "productos"));
-            todosProductos = snap2.docs.map(d => ({ id: d.id, ...d.data() }));
-            renderProductos(todosProductos);
-        } catch (err2) {
-            document.getElementById("productos-grid").innerHTML =
-                `<p class="msg-centro" style="color:#c62828">Error al cargar productos: ${err2.message}</p>`;
-        }
+    } catch (err) {
+        document.getElementById("productos-grid").innerHTML =
+            `<p class="msg-centro" style="color:#c62828">Error: ${err.message}</p>`;
     }
 }
 
 function renderProductos(lista) {
     const grid = document.getElementById("productos-grid");
-
     if (!lista.length) {
         grid.innerHTML = `<p class="msg-centro">No hay productos registrados.</p>`;
         return;
     }
-
     grid.innerHTML = lista.map(p => {
-        const imgHtml = p.imagen
+        const img  = p.imagen
             ? `<img class="prod-img" src="${p.imagen}" alt="${p.nombre}"
                     onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`
             : "";
-        const placeholder = `<div class="prod-img-placeholder" ${p.imagen ? 'style="display:none"' : ""}>🍫</div>`;
-        const dispHtml = p.disponible !== false
+        const ph   = `<div class="prod-img-placeholder" ${p.imagen ? 'style="display:none"' : ""}>🍫</div>`;
+        const disp = p.disponible !== false
             ? `<span class="prod-disponible">● Disponible</span>`
             : `<span class="prod-no-disponible">● No disponible</span>`;
-
         return `
         <div class="producto-card">
-            ${imgHtml}${placeholder}
+            ${img}${ph}
             <div class="prod-info">
                 <p class="prod-nombre">${p.nombre || "Sin nombre"}</p>
                 <p class="prod-desc">${p.descripcion || ""}</p>
@@ -345,7 +315,7 @@ function renderProductos(lista) {
                     <span class="prod-precio">$ ${Number(p.precio || 0).toLocaleString("es-CO")}</span>
                     <span class="prod-categoria">${p.categoria || "—"}</span>
                 </div>
-                ${dispHtml}
+                ${disp}
             </div>
             <div class="prod-actions">
                 <button class="btn-editar-prod"   data-id="${p.id}">✏ Editar</button>
@@ -354,166 +324,66 @@ function renderProductos(lista) {
         </div>`;
     }).join("");
 
-    grid.querySelectorAll(".btn-editar-prod").forEach(btn => {
-        btn.addEventListener("click", () => abrirFormProducto(btn.dataset.id));
-    });
-    grid.querySelectorAll(".btn-eliminar-prod").forEach(btn => {
-        btn.addEventListener("click", () => eliminarProducto(btn.dataset.id));
-    });
+    grid.querySelectorAll(".btn-editar-prod").forEach(btn =>
+        btn.addEventListener("click", () => abrirFormProducto(btn.dataset.id)));
+    grid.querySelectorAll(".btn-eliminar-prod").forEach(btn =>
+        btn.addEventListener("click", () => eliminarProducto(btn.dataset.id)));
 }
 
 async function eliminarProducto(id) {
-    const p = todosProductos.find(x => x.id === id);
-    if (!confirm(`¿Eliminar "${p?.nombre || "este producto"}"?\nEsta acción no se puede deshacer.`)) return;
+    const p  = todosProductos.find(x => x.id === id);
+    const ok = await confirmar("Eliminar producto",
+        `¿Eliminar "${p?.nombre}"? No se puede deshacer.`);
+    if (!ok) return;
     try {
         await deleteDoc(doc(db, "productos", id));
         todosProductos = todosProductos.filter(x => x.id !== id);
         renderProductos(todosProductos);
         toast(`"${p?.nombre}" eliminado`, "ok");
-    } catch (err) {
-        toast("Error al eliminar: " + err.message, "error");
-    }
+    } catch (err) { toast("Error: " + err.message, "error"); }
 }
 
 // ════════════════════════════════════════════════════════════
-//  FORMULARIO PRODUCTO + UPLOAD DE IMAGEN
+//  FORMULARIO PRODUCTO
 // ════════════════════════════════════════════════════════════
 
-document.getElementById("btn-nuevo-producto").addEventListener("click", () => abrirFormProducto(null));
+document.getElementById("btn-nuevo-producto")
+    .addEventListener("click", () => abrirFormProducto(null));
 
 function abrirFormProducto(id) {
     const p = id ? todosProductos.find(x => x.id === id) : null;
-
     document.getElementById("modal-producto-titulo").textContent = p ? "Editar Producto" : "Nuevo Producto";
     document.getElementById("prod-id").value           = p?.id          || "";
     document.getElementById("prod-nombre").value       = p?.nombre      || "";
     document.getElementById("prod-descripcion").value  = p?.descripcion || "";
     document.getElementById("prod-precio").value       = p?.precio      || "";
     document.getElementById("prod-categoria").value    = p?.categoria   || "";
-    document.getElementById("prod-imagen-url").value   = p?.imagen      || "";
+    document.getElementById("prod-imagen").value       = p?.imagen      || "";
     document.getElementById("prod-disponible").checked = p?.disponible !== false;
-
-    // Resetear área de upload
-    resetUploadArea();
-
-    // Si hay imagen existente, mostrar preview
-    if (p?.imagen) {
-        mostrarPreview(p.imagen);
-    }
-
     document.getElementById("modal-overlay").classList.remove("hidden");
     document.getElementById("modal-producto").classList.remove("hidden");
 }
 
-// ── Upload área ───────────────────────────────────────────────
-const fileInput   = document.getElementById("prod-imagen-file");
-const uploadArea  = document.getElementById("upload-area");
-
-fileInput.addEventListener("change", e => {
-    const file = e.target.files[0];
-    if (file) handleFileSelected(file);
-});
-
-// Drag & drop
-uploadArea.addEventListener("dragover",  e => { e.preventDefault(); uploadArea.classList.add("dragover"); });
-uploadArea.addEventListener("dragleave", () => uploadArea.classList.remove("dragover"));
-uploadArea.addEventListener("drop", e => {
-    e.preventDefault();
-    uploadArea.classList.remove("dragover");
-    const file = e.dataTransfer.files[0];
-    if (file && file.type.startsWith("image/")) handleFileSelected(file);
-});
-
-document.getElementById("upload-remove").addEventListener("click", e => {
-    e.stopPropagation();
-    resetUploadArea();
-    document.getElementById("prod-imagen-url").value = "";
-    fileInput.value = "";
-});
-
-function handleFileSelected(file) {
-    if (file.size > 5 * 1024 * 1024) {
-        toast("La imagen supera los 5 MB", "error");
-        return;
-    }
-    // Mostrar preview local inmediato
-    const reader = new FileReader();
-    reader.onload = e => mostrarPreview(e.target.result);
-    reader.readAsDataURL(file);
-}
-
-function mostrarPreview(src) {
-    document.getElementById("upload-placeholder").classList.add("hidden");
-    document.getElementById("upload-progress").classList.add("hidden");
-    document.getElementById("upload-preview").classList.remove("hidden");
-    document.getElementById("preview-img").src = src;
-}
-
-function resetUploadArea() {
-    document.getElementById("upload-placeholder").classList.remove("hidden");
-    document.getElementById("upload-preview").classList.add("hidden");
-    document.getElementById("upload-progress").classList.add("hidden");
-    document.getElementById("progress-fill").style.width = "0%";
-    document.getElementById("progress-text").textContent = "Subiendo...";
-}
-
-/** Sube el archivo a Firebase Storage y devuelve la URL */
-async function subirImagen(file) {
-    return new Promise((resolve, reject) => {
-        const nombreArchivo = `productos/${Date.now()}_${file.name.replace(/\s+/g, "_")}`;
-        const storageRef    = ref(storage, nombreArchivo);
-        const uploadTask    = uploadBytesResumable(storageRef, file);
-
-        // Mostrar barra de progreso
-        document.getElementById("upload-preview").classList.add("hidden");
-        document.getElementById("upload-progress").classList.remove("hidden");
-
-        uploadTask.on("state_changed",
-            snapshot => {
-                const pct = Math.round((snapshot.bytesTransferred / snapshot.totalBytes) * 100);
-                document.getElementById("progress-fill").style.width = `${pct}%`;
-                document.getElementById("progress-text").textContent = `Subiendo... ${pct}%`;
-            },
-            err => reject(err),
-            async () => {
-                const url = await getDownloadURL(uploadTask.snapshot.ref);
-                resolve(url);
-            }
-        );
-    });
-}
-
-// ── Submit del formulario ─────────────────────────────────────
 document.getElementById("form-producto").addEventListener("submit", async e => {
     e.preventDefault();
-
     const id          = document.getElementById("prod-id").value;
     const nombre      = document.getElementById("prod-nombre").value.trim();
     const descripcion = document.getElementById("prod-descripcion").value.trim();
     const precio      = parseFloat(document.getElementById("prod-precio").value);
     const categoria   = document.getElementById("prod-categoria").value;
+    const imagen      = document.getElementById("prod-imagen").value.trim();
     const disponible  = document.getElementById("prod-disponible").checked;
-    const file        = fileInput.files[0];
 
     if (!nombre || !descripcion || isNaN(precio) || !categoria) {
-        toast("Completa todos los campos obligatorios", "error");
-        return;
+        toast("Completa todos los campos obligatorios", "error"); return;
     }
 
-    const btnGuardar = document.getElementById("btn-guardar-prod");
-    btnGuardar.textContent = "Guardando...";
-    btnGuardar.disabled    = true;
+    const btn = document.getElementById("btn-guardar-prod");
+    btn.textContent = "Guardando...";
+    btn.disabled    = true;
 
     try {
-        let imagenUrl = document.getElementById("prod-imagen-url").value;
-
-        // Si hay archivo nuevo, subirlo a Storage
-        if (file) {
-            imagenUrl = await subirImagen(file);
-        }
-
-        const datos = { nombre, descripcion, precio, categoria, disponible, imagen: imagenUrl };
-
+        const datos = { nombre, descripcion, precio, categoria, imagen, disponible };
         if (id) {
             await updateDoc(doc(db, "productos", id), datos);
             toast(`"${nombre}" actualizado`, "ok");
@@ -521,14 +391,13 @@ document.getElementById("form-producto").addEventListener("submit", async e => {
             await addDoc(collection(db, "productos"), datos);
             toast(`"${nombre}" creado`, "ok");
         }
-
         cerrarModales();
         await cargarProductos();
     } catch (err) {
         toast("Error al guardar: " + err.message, "error");
     } finally {
-        btnGuardar.textContent = "Guardar producto";
-        btnGuardar.disabled    = false;
+        btn.textContent = "Guardar producto";
+        btn.disabled    = false;
     }
 });
 
@@ -541,7 +410,4 @@ document.getElementById("btn-cancelar-prod").addEventListener("click", cerrarMod
 document.getElementById("modal-pedido-close").addEventListener("click",   cerrarModales);
 document.getElementById("modal-producto-close").addEventListener("click", cerrarModales);
 document.getElementById("modal-overlay").addEventListener("click",        cerrarModales);
-
-document.addEventListener("keydown", e => {
-    if (e.key === "Escape") cerrarModales();
-});
+document.addEventListener("keydown", e => { if (e.key === "Escape") cerrarModales(); });

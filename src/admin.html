@@ -24,12 +24,11 @@
         <button class="tab-btn" data-tab="productos">Productos</button>
     </div>
 
-    <!-- ══ CONTENIDO PRINCIPAL ═════════════════════════════════ -->
+    <!-- ══ MAIN ════════════════════════════════════════════════ -->
     <main class="admin-main">
 
-        <!-- ── Pestaña Pedidos ── -->
+        <!-- ── Pedidos ── -->
         <section id="tab-pedidos">
-
             <div class="stats-grid">
                 <div class="stat-card">
                     <span class="stat-num" id="stat-total">—</span>
@@ -65,14 +64,12 @@
             </div>
         </section>
 
-        <!-- ── Pestaña Productos ── -->
+        <!-- ── Productos ── -->
         <section id="tab-productos" class="hidden">
-
             <div class="seccion-header">
                 <h2>Productos</h2>
                 <button class="btn-nuevo" id="btn-nuevo-producto">+ Nuevo Producto</button>
             </div>
-
             <div id="productos-grid" class="productos-grid">
                 <p class="msg-centro">Cargando productos...</p>
             </div>
@@ -83,7 +80,7 @@
     <!-- ══ MODAL PEDIDO ════════════════════════════════════════ -->
     <div id="modal-overlay" class="modal-overlay hidden"></div>
 
-    <div id="modal-pedido" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="modal-pedido-titulo">
+    <div id="modal-pedido" class="modal hidden" role="dialog" aria-modal="true">
         <div class="modal-head">
             <h3 id="modal-pedido-titulo">Detalle del pedido</h3>
             <button class="modal-close" id="modal-pedido-close" aria-label="Cerrar">✕</button>
@@ -92,7 +89,7 @@
     </div>
 
     <!-- ══ MODAL PRODUCTO ══════════════════════════════════════ -->
-    <div id="modal-producto" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="modal-producto-titulo">
+    <div id="modal-producto" class="modal hidden" role="dialog" aria-modal="true">
         <div class="modal-head">
             <h3 id="modal-producto-titulo">Nuevo Producto</h3>
             <button class="modal-close" id="modal-producto-close" aria-label="Cerrar">✕</button>
@@ -105,17 +102,14 @@
                     <label for="prod-nombre">Nombre</label>
                     <input type="text" id="prod-nombre" required placeholder="Ej. Bombón de maracuyá">
                 </div>
-
                 <div class="form-grupo">
                     <label for="prod-descripcion">Descripción</label>
                     <textarea id="prod-descripcion" required placeholder="Describe el producto..."></textarea>
                 </div>
-
                 <div class="form-grupo">
                     <label for="prod-precio">Precio (COP)</label>
                     <input type="number" id="prod-precio" required min="0" placeholder="Ej. 15000">
                 </div>
-
                 <div class="form-grupo">
                     <label for="prod-categoria">Categoría</label>
                     <select id="prod-categoria" required>
@@ -127,37 +121,16 @@
                         <option value="cajas">Cajas</option>
                     </select>
                 </div>
-
                 <div class="form-grupo">
-                    <label for="prod-imagen">Imagen del producto</label>
-                    <div class="upload-area" id="upload-area">
-                        <input type="file" id="prod-imagen-file" accept="image/*" class="file-input">
-                        <div class="upload-placeholder" id="upload-placeholder">
-                            <span class="upload-icon">📷</span>
-                            <p>Haz clic o arrastra una imagen aquí</p>
-                            <small>JPG, PNG o WEBP · Máx. 5 MB</small>
-                        </div>
-                        <div class="upload-preview hidden" id="upload-preview">
-                            <img id="preview-img" src="" alt="Preview">
-                            <button type="button" class="upload-remove" id="upload-remove" aria-label="Quitar imagen">✕</button>
-                        </div>
-                        <div class="upload-progress hidden" id="upload-progress">
-                            <div class="progress-bar">
-                                <div class="progress-fill" id="progress-fill"></div>
-                            </div>
-                            <span id="progress-text">Subiendo...</span>
-                        </div>
-                    </div>
-                    <input type="hidden" id="prod-imagen-url">
+                    <label for="prod-imagen">URL de imagen</label>
+                    <input type="text" id="prod-imagen" placeholder="https://...">
                 </div>
-
                 <div class="form-grupo">
                     <label class="form-check">
                         <input type="checkbox" id="prod-disponible" checked>
                         Disponible para la venta
                     </label>
                 </div>
-
                 <div class="form-actions">
                     <button type="button" class="btn-cancelar-form" id="btn-cancelar-prod">Cancelar</button>
                     <button type="submit" class="btn-guardar" id="btn-guardar-prod">Guardar producto</button>
@@ -166,10 +139,24 @@
         </div>
     </div>
 
-    <!-- ══ TOAST ═══════════════════════════════════════════════ -->
+    <!-- ══ MODAL CONFIRMACIÓN ══════════════════════════════════ -->
+    <div id="modal-confirm-overlay" class="modal-overlay hidden"></div>
+    <div id="modal-confirm" class="modal modal-confirm hidden" role="alertdialog" aria-modal="true">
+        <div class="modal-confirm-body">
+            <div class="confirm-icono">⚠</div>
+            <h3 id="confirm-titulo"></h3>
+            <p id="confirm-mensaje"></p>
+            <div class="confirm-actions">
+                <button class="btn-cancelar-form" id="confirm-btn-cancelar">Cancelar</button>
+                <button class="btn-confirm-eliminar" id="confirm-btn-ok">Eliminar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ══ TOASTS ═══════════════════════════════════════════════ -->
     <div id="toast-container" class="toast-container" aria-live="polite"></div>
 
-    <!-- ══ SCRIPTS ═════════════════════════════════════════════ -->
+    <!-- ══ SCRIPT ══════════════════════════════════════════════ -->
     <script type="module" src="/src/js/admin.js"></script>
 </body>
 </html>
