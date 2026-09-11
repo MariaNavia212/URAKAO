@@ -61,16 +61,15 @@
             </div>
 
             <div class="buscador-wrap">
-                <button class="buscador-icono-btn" id="btn-buscar" aria-label="Buscar">🔍</button>
                 <input
-                    type="search"
+                    type="text"
                     id="buscador-pedidos"
                     class="buscador-input"
                     placeholder="Buscar por nombre, teléfono o correo..."
                     autocomplete="off"
+                    spellcheck="false"
                 >
-                <span class="buscador-resultados hidden" id="buscador-resultados"></span>
-                <button class="buscador-limpiar hidden" id="btn-limpiar-busqueda" aria-label="Limpiar">✕</button>
+                <span class="buscador-resultados" id="buscador-resultados"></span>
             </div>
 
             <div id="pedidos-grid" class="pedidos-grid">

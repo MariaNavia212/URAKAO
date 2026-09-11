@@ -115,30 +115,7 @@ async function cargarPedidos() {
         );
         todosPedidos = snap.docs.map(d => ({ id: d.id, ...d.data() }));
         actualizarStats();
-        aplicarFiltrosYBusqueda();
-
-        // Conectar buscador (una sola vez)
-        const buscador = document.getElementById("buscador-pedidos");
-        const btnBuscar = document.getElementById("btn-buscar");
-        const btnLimpiar = document.getElementById("btn-limpiar-busqueda");
-
-        // Filtrar mientras escribe
-        buscador.addEventListener("input", () => aplicarFiltrosYBusqueda());
-
-        // Filtrar al presionar Enter
-        buscador.addEventListener("keydown", e => {
-            if (e.key === "Enter") { e.preventDefault(); aplicarFiltrosYBusqueda(); }
-        });
-
-        // Botón 🔍 también ejecuta la búsqueda
-        btnBuscar.addEventListener("click", () => aplicarFiltrosYBusqueda());
-
-        // Botón limpiar
-        btnLimpiar.addEventListener("click", () => {
-            buscador.value = "";
-            aplicarFiltrosYBusqueda();
-            buscador.focus();
-        });
+        renderPedidos(todosPedidos);
     } catch (err) {
         document.getElementById("pedidos-grid").innerHTML =
             `<p class="msg-centro" style="color:#c62828">Error al cargar pedidos: ${err.message}</p>`;
@@ -158,28 +135,31 @@ function actualizarStats() {
     document.getElementById("stat-ingresos").textContent   = `$ ${ing.toLocaleString("es-CO")}`;
 }
 
-// Filtros
+// ── Filtros por estado ────────────────────────────────────────
 document.querySelectorAll(".filtro-btn").forEach(btn => {
     btn.addEventListener("click", () => {
         document.querySelectorAll(".filtro-btn").forEach(b => b.classList.remove("active"));
         btn.classList.add("active");
         filtroActual = btn.dataset.estado;
-        aplicarFiltrosYBusqueda();
+        filtrarYMostrar();
     });
 });
 
-// Buscador
-/** Aplica el filtro de estado y el texto de búsqueda al mismo tiempo */
-function aplicarFiltrosYBusqueda() {
-    const buscadorInput = document.getElementById("buscador-pedidos");
-    const texto = (buscadorInput?.value || "").trim().toLowerCase();
+// ── Buscador ──────────────────────────────────────────────────
+document.getElementById("buscador-pedidos").addEventListener("input", filtrarYMostrar);
 
-    let lista = filtroActual === "todos"
-        ? todosPedidos
+/** Filtra pedidos por estado activo + texto del buscador y los renderiza */
+function filtrarYMostrar() {
+    const texto = document.getElementById("buscador-pedidos").value.trim().toLowerCase();
+
+    // 1. Filtrar por estado
+    let resultado = filtroActual === "todos"
+        ? todosPedidos.slice()
         : todosPedidos.filter(p => p.estado === filtroActual);
 
-    if (texto) {
-        lista = lista.filter(p => {
+    // 2. Filtrar por texto si hay algo escrito
+    if (texto.length > 0) {
+        resultado = resultado.filter(p => {
             const nombre   = (p.domicilio?.nombre   || "").toLowerCase();
             const telefono = (p.domicilio?.telefono || "").toLowerCase();
             const correo   = (p.usuarioEmail        || "").toLowerCase();
@@ -187,19 +167,14 @@ function aplicarFiltrosYBusqueda() {
         });
     }
 
-    // Mostrar/ocultar botón limpiar y contador
+    // 3. Mostrar contador
     const contador = document.getElementById("buscador-resultados");
-    const btnLimpiar = document.getElementById("btn-limpiar-busqueda");
-    if (texto) {
-        contador.textContent = `${lista.length} resultado${lista.length !== 1 ? "s" : ""}`;
-        contador.classList.remove("hidden");
-        btnLimpiar.classList.remove("hidden");
-    } else {
-        contador.classList.add("hidden");
-        btnLimpiar.classList.add("hidden");
-    }
+    contador.textContent = texto.length > 0
+        ? `${resultado.length} resultado${resultado.length !== 1 ? "s" : ""}`
+        : "";
 
-    renderPedidos(lista);
+    // 4. Renderizar
+    renderPedidos(resultado);
 }
 
 function renderPedidos(lista) {
@@ -320,7 +295,7 @@ async function cambiarEstado(id, nuevoEstado) {
         if (p) p.estado = nuevoEstado;
         actualizarStats();
         cerrarModales();
-        aplicarFiltrosYBusqueda();
+        filtrarYMostrar();
         toast(`Estado actualizado: ${nuevoEstado}`, "ok");
     } catch (err) {
         toast("Error al cambiar estado: " + err.message, "error");
@@ -336,7 +311,7 @@ async function eliminarPedido(id) {
         todosPedidos = todosPedidos.filter(x => x.id !== id);
         actualizarStats();
         cerrarModales();
-        aplicarFiltrosYBusqueda();
+        filtrarYMostrar();
         toast("Pedido eliminado", "ok");
     } catch (err) {
         toast("Error al eliminar: " + err.message, "error");
