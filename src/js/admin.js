@@ -440,13 +440,13 @@ function abrirFormProducto(id) {
     document.getElementById("prod-imagen-url").value   = p?.imagen      || "";
     document.getElementById("prod-disponible").checked = p?.disponible !== false;
 
-    // Resetear área de upload
+    // Resetear área de upload siempre al abrir
     resetUploadArea();
+    document.getElementById("prod-imagen-url").value = p?.imagen || "";
+    fileInput.value = "";
 
-    // Si hay imagen existente, mostrar preview
-    if (p?.imagen) {
-        mostrarPreview(p.imagen);
-    }
+    // Si el producto ya tiene imagen, mostrar preview
+    if (p?.imagen) mostrarPreview(p.imagen);
 
     document.getElementById("modal-overlay").classList.remove("hidden");
     document.getElementById("modal-producto").classList.remove("hidden");
@@ -507,38 +507,30 @@ function resetUploadArea() {
 /** Sube el archivo a Cloudinary y devuelve la URL pública */
 async function subirImagen(file) {
     const formData = new FormData();
-    formData.append("file",           file);
-    formData.append("upload_preset",  CLOUDINARY_PRESET);
-    formData.append("folder",         "urakao/productos");
+    formData.append("file",          file);
+    formData.append("upload_preset", CLOUDINARY_PRESET);
+    formData.append("folder",        "urakao/productos");
 
-    // Mostrar barra de progreso
+    // Mostrar barra de progreso indeterminada mientras sube
     document.getElementById("upload-preview").classList.add("hidden");
     document.getElementById("upload-progress").classList.remove("hidden");
+    document.getElementById("progress-fill").style.width = "60%";
+    document.getElementById("progress-text").textContent = "Subiendo imagen...";
 
-    return new Promise((resolve, reject) => {
-        const xhr = new XMLHttpRequest();
-        xhr.open("POST", `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD}/image/upload`);
+    const url = `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD}/image/upload`;
 
-        xhr.upload.addEventListener("progress", e => {
-            if (e.lengthComputable) {
-                const pct = Math.round((e.loaded / e.total) * 100);
-                document.getElementById("progress-fill").style.width  = `${pct}%`;
-                document.getElementById("progress-text").textContent  = `Subiendo... ${pct}%`;
-            }
-        });
+    const res = await fetch(url, { method: "POST", body: formData });
 
-        xhr.addEventListener("load", () => {
-            if (xhr.status === 200) {
-                const res = JSON.parse(xhr.responseText);
-                resolve(res.secure_url);
-            } else {
-                reject(new Error("Error al subir imagen a Cloudinary"));
-            }
-        });
+    if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err?.error?.message || `Cloudinary error ${res.status}`);
+    }
 
-        xhr.addEventListener("error", () => reject(new Error("Error de red al subir imagen")));
-        xhr.send(formData);
-    });
+    document.getElementById("progress-fill").style.width = "100%";
+    document.getElementById("progress-text").textContent = "¡Imagen subida!";
+
+    const data = await res.json();
+    return data.secure_url;
 }
 
 // ── Submit del formulario ─────────────────────────────────────
