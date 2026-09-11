@@ -115,7 +115,11 @@ async function cargarPedidos() {
         );
         todosPedidos = snap.docs.map(d => ({ id: d.id, ...d.data() }));
         actualizarStats();
-        renderPedidos(todosPedidos);
+        aplicarFiltrosYBusqueda();
+
+        // Conectar buscador (una sola vez)
+        const buscador = document.getElementById("buscador-pedidos");
+        buscador.addEventListener("input", () => aplicarFiltrosYBusqueda());
     } catch (err) {
         document.getElementById("pedidos-grid").innerHTML =
             `<p class="msg-centro" style="color:#c62828">Error al cargar pedidos: ${err.message}</p>`;
@@ -146,13 +150,10 @@ document.querySelectorAll(".filtro-btn").forEach(btn => {
 });
 
 // Buscador
-const buscadorInput = document.getElementById("buscador-pedidos");
-
-buscadorInput.addEventListener("input", () => aplicarFiltrosYBusqueda());
-
 /** Aplica el filtro de estado y el texto de búsqueda al mismo tiempo */
 function aplicarFiltrosYBusqueda() {
-    const texto = buscadorInput.value.trim().toLowerCase();
+    const buscadorInput = document.getElementById("buscador-pedidos");
+    const texto = (buscadorInput?.value || "").trim().toLowerCase();
 
     let lista = filtroActual === "todos"
         ? todosPedidos
