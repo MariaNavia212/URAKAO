@@ -1,211 +1,547 @@
 // ============================================================
 //  URAKAO — Panel de Administración
-//  Acceso restringido a: maria.navia212@pascualbravo.edu.co
 // ============================================================
 
-import { auth, db } from "./firebase.js";
+import { auth, db, storage } from "./firebase.js";
 import {
     onAuthStateChanged,
     signOut
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 import {
-    collection,
-    getDocs,
-    doc,
-    updateDoc,
-    query,
-    orderBy
+    collection, getDocs, doc,
+    updateDoc, deleteDoc, addDoc,
+    query, orderBy
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import {
+    ref, uploadBytesResumable, getDownloadURL
+} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
 
-const ADMIN_EMAILS = [
+// ── Emails con acceso admin ───────────────────────────────────
+const ADMINS = [
     "maria.navia212@pascualbravo.edu.co",
     "naviajimenezalejandra04@gmail.com"
 ];
 
-let todosPedidos = [];
-let filtroActual = "todos";
+// ── Estado de la app ──────────────────────────────────────────
+let todosPedidos  = [];
+let todosProductos = [];
+let filtroActual  = "todos";
 
-// ── Proteger ruta ─────────────────────────────────────────────
-onAuthStateChanged(auth, (user) => {
-    if (!user)                         { window.location.href = "/login"; return; }
-    if (!ADMIN_EMAILS.includes(user.email)) { window.location.href = "/";     return; }
-    document.getElementById("admin-email").textContent = user.email;
+// ════════════════════════════════════════════════════════════
+//  UTILIDADES
+// ════════════════════════════════════════════════════════════
+
+/** Muestra una notificación toast */
+function toast(mensaje, tipo = "ok") {
+    const container = document.getElementById("toast-container");
+    const el = document.createElement("div");
+    el.className = `toast toast-${tipo}`;
+    const iconos = { ok: "✓", error: "✕", info: "ℹ" };
+    el.innerHTML = `<span>${iconos[tipo] || "ℹ"}</span><span>${mensaje}</span>`;
+    container.appendChild(el);
+    setTimeout(() => {
+        el.classList.add("toast-out");
+        el.addEventListener("animationend", () => el.remove());
+    }, 3500);
+}
+
+/** Devuelve la clase CSS del badge según estado */
+function badgeClass(estado) {
+    const mapa = {
+        "pendiente":  "badge-pendiente",
+        "en camino":  "badge-en-camino",
+        "entregado":  "badge-entregado",
+        "cancelado":  "badge-cancelado"
+    };
+    return mapa[estado] ?? "badge-pendiente";
+}
+
+/** Formatea fecha desde Firestore Timestamp */
+function formatFecha(ts, estilo = "short") {
+    if (!ts?.toDate) return "—";
+    return ts.toDate().toLocaleString("es-CO", {
+        dateStyle: estilo,
+        timeStyle: "short"
+    });
+}
+
+/** Cierra todos los modales */
+function cerrarModales() {
+    document.getElementById("modal-overlay").classList.add("hidden");
+    document.getElementById("modal-pedido").classList.add("hidden");
+    document.getElementById("modal-producto").classList.add("hidden");
+}
+
+// ════════════════════════════════════════════════════════════
+//  AUTH
+// ════════════════════════════════════════════════════════════
+
+onAuthStateChanged(auth, user => {
+    if (!user)                     { window.location.href = "/login"; return; }
+    if (!ADMINS.includes(user.email)) { window.location.href = "/";  return; }
+
+    document.getElementById("admin-email").textContent = user.displayName || user.email;
     cargarPedidos();
+    cargarProductos();
 });
 
-window.cerrarSesion = async () => {
+document.getElementById("btn-salir").addEventListener("click", async () => {
     await signOut(auth);
     window.location.href = "/";
-};
+});
 
-// ── Cargar todos los pedidos ──────────────────────────────────
+// ════════════════════════════════════════════════════════════
+//  TABS
+// ════════════════════════════════════════════════════════════
+
+document.querySelectorAll(".tab-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+        document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+        btn.classList.add("active");
+        const tab = btn.dataset.tab;
+        document.getElementById("tab-pedidos").classList.toggle("hidden",   tab !== "pedidos");
+        document.getElementById("tab-productos").classList.toggle("hidden", tab !== "productos");
+    });
+});
+
+// ════════════════════════════════════════════════════════════
+//  PEDIDOS
+// ════════════════════════════════════════════════════════════
+
 async function cargarPedidos() {
-    const lista = document.getElementById("pedidos-lista");
     try {
-        const q    = query(collection(db, "pedidos"), orderBy("creadoEn", "desc"));
-        const snap = await getDocs(q);
-
+        const snap = await getDocs(
+            query(collection(db, "pedidos"), orderBy("creadoEn", "desc"))
+        );
         todosPedidos = snap.docs.map(d => ({ id: d.id, ...d.data() }));
         actualizarStats();
         renderPedidos(todosPedidos);
     } catch (err) {
-        lista.innerHTML = `<p class="error-admin">Error al cargar pedidos: ${err.message}</p>`;
+        document.getElementById("pedidos-grid").innerHTML =
+            `<p class="msg-centro" style="color:#c62828">Error al cargar pedidos: ${err.message}</p>`;
     }
 }
 
-// ── Estadísticas ──────────────────────────────────────────────
 function actualizarStats() {
-    const pendientes  = todosPedidos.filter(p => p.estado === "pendiente").length;
-    const entregados  = todosPedidos.filter(p => p.estado === "entregado").length;
-    const ingresos    = todosPedidos
+    const pend = todosPedidos.filter(p => p.estado === "pendiente").length;
+    const entr = todosPedidos.filter(p => p.estado === "entregado").length;
+    const ing  = todosPedidos
         .filter(p => p.estado !== "cancelado")
-        .reduce((sum, p) => sum + (p.total || 0), 0);
+        .reduce((s, p) => s + (p.total || 0), 0);
 
     document.getElementById("stat-total").textContent      = todosPedidos.length;
-    document.getElementById("stat-pendientes").textContent = pendientes;
-    document.getElementById("stat-entregados").textContent = entregados;
-    document.getElementById("stat-ingresos").textContent   = `$${Number(ingresos).toLocaleString("es-CO")}`;
+    document.getElementById("stat-pendientes").textContent = pend;
+    document.getElementById("stat-entregados").textContent = entr;
+    document.getElementById("stat-ingresos").textContent   = `$ ${ing.toLocaleString("es-CO")}`;
 }
 
-// ── Filtros ───────────────────────────────────────────────────
+// Filtros
 document.querySelectorAll(".filtro-btn").forEach(btn => {
     btn.addEventListener("click", () => {
         document.querySelectorAll(".filtro-btn").forEach(b => b.classList.remove("active"));
         btn.classList.add("active");
         filtroActual = btn.dataset.estado;
-        const filtrados = filtroActual === "todos"
+        const lista = filtroActual === "todos"
             ? todosPedidos
             : todosPedidos.filter(p => p.estado === filtroActual);
-        renderPedidos(filtrados);
+        renderPedidos(lista);
     });
 });
 
-// ── Render lista de pedidos ───────────────────────────────────
-function renderPedidos(pedidos) {
-    const lista = document.getElementById("pedidos-lista");
+function renderPedidos(lista) {
+    const grid = document.getElementById("pedidos-grid");
 
-    if (pedidos.length === 0) {
-        lista.innerHTML = "<p class='sin-pedidos'>No hay pedidos en esta categoría.</p>";
+    if (!lista.length) {
+        grid.innerHTML = `<p class="msg-centro">No hay pedidos en esta categoría.</p>`;
         return;
     }
 
-    lista.innerHTML = pedidos.map(p => {
-        const fecha  = p.creadoEn?.toDate
-            ? p.creadoEn.toDate().toLocaleString("es-CO", { dateStyle: "medium", timeStyle: "short" })
-            : "—";
+    grid.innerHTML = lista.map(p => {
         const estado = p.estado || "pendiente";
-
+        const prods  = (p.productos || []).map(i => `${i.nombre} ×${i.cantidad}`).join(" · ");
         return `
-        <div class="pedido-card" onclick="verDetalle('${p.id}')">
-            <div class="pedido-card-header">
+        <article class="pedido-card" data-id="${p.id}" tabindex="0" role="button"
+                 aria-label="Ver pedido de ${p.domicilio?.nombre || p.usuarioEmail}">
+            <div class="pc-header">
                 <div>
-                    <p class="pedido-cliente">${p.domicilio?.nombre || p.usuarioEmail}</p>
-                    <p class="pedido-contacto">
-                        📞 ${p.domicilio?.telefono || "—"} &nbsp;·&nbsp;
-                        ✉️ ${p.usuarioEmail}
-                    </p>
+                    <p class="pc-nombre">${p.domicilio?.nombre || p.usuarioEmail}</p>
+                    <p class="pc-contacto">📞 ${p.domicilio?.telefono || "—"} &nbsp;·&nbsp; ✉️ ${p.usuarioEmail}</p>
                 </div>
-                <span class="estado-badge estado-${estado}">${estado}</span>
+                <span class="badge ${badgeClass(estado)}">${estado}</span>
             </div>
-            <div class="pedido-card-body">
-                <p class="pedido-dir">📍 ${p.domicilio?.direccion || "—"}, ${p.domicilio?.ciudad || ""}</p>
-                <p class="pedido-productos">${(p.productos || []).map(i => `${i.nombre} ×${i.cantidad}`).join(" · ")}</p>
+            <div class="pc-body">
+                <p class="pc-dir">📍 ${p.domicilio?.direccion || "—"}, ${p.domicilio?.ciudad || ""}</p>
+                <p class="pc-productos">${prods}</p>
             </div>
-            <div class="pedido-card-footer">
-                <span class="pedido-fecha">${fecha}</span>
-                <span class="pedido-total">$${Number(p.total || 0).toLocaleString("es-CO")}</span>
+            <div class="pc-footer">
+                <span class="pc-fecha">${formatFecha(p.creadoEn)}</span>
+                <span class="pc-total">$ ${Number(p.total || 0).toLocaleString("es-CO")}</span>
             </div>
-        </div>
-        `;
+        </article>`;
     }).join("");
+
+    grid.querySelectorAll(".pedido-card").forEach(card => {
+        const abrir = () => abrirModalPedido(card.dataset.id);
+        card.addEventListener("click", abrir);
+        card.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") abrir(); });
+    });
 }
 
-// ── Ver detalle completo ──────────────────────────────────────
-window.verDetalle = function (id) {
+function abrirModalPedido(id) {
     const p = todosPedidos.find(x => x.id === id);
     if (!p) return;
 
-    const fecha = p.creadoEn?.toDate
-        ? p.creadoEn.toDate().toLocaleString("es-CO", { dateStyle: "long", timeStyle: "short" })
-        : "—";
+    const tel    = (p.domicilio?.telefono || "").replace(/\s/g, "");
+    const waMsg  = encodeURIComponent(`Hola ${p.domicilio?.nombre || ""}, tu pedido URAKAO está en camino 🍫`);
+    const estado = p.estado || "pendiente";
 
-    const productosHtml = (p.productos || []).map(i => `
-        <div class="detalle-producto">
+    const prodsHtml = (p.productos || []).map(i => `
+        <div class="prod-row">
             <span>${i.nombre} × ${i.cantidad}</span>
-            <span>$${Number(i.precio * i.cantidad).toLocaleString("es-CO")}</span>
-        </div>
-    `).join("");
+            <span>$ ${Number(i.precio * i.cantidad).toLocaleString("es-CO")}</span>
+        </div>`).join("");
 
-    document.getElementById("modal-titulo").textContent = `Pedido — ${p.domicilio?.nombre || p.usuarioEmail}`;
-    document.getElementById("modal-body").innerHTML = `
-        <div class="detalle-seccion">
-            <h4>Cliente</h4>
-            <p><strong>Nombre:</strong> ${p.domicilio?.nombre || "—"}</p>
-            <p><strong>Teléfono:</strong>
-                <a href="tel:${p.domicilio?.telefono}" class="link-tel">
-                    📞 ${p.domicilio?.telefono || "—"}
-                </a>
-                <a href="https://wa.me/57${(p.domicilio?.telefono || "").replace(/\s/g,"")}?text=Hola%20${encodeURIComponent(p.domicilio?.nombre || "")}%2C%20tu%20pedido%20URAKAO%20est%C3%A1%20en%20camino%20%F0%9F%8D%AB"
-                   target="_blank" class="link-wa">💬 WhatsApp</a>
-            </p>
-            <p><strong>Correo:</strong> ${p.usuarioEmail}</p>
-        </div>
+    document.getElementById("modal-pedido-titulo").textContent =
+        p.domicilio?.nombre || p.usuarioEmail;
 
-        <div class="detalle-seccion">
-            <h4>Entrega</h4>
-            <p><strong>Dirección:</strong> ${p.domicilio?.direccion || "—"}</p>
-            <p><strong>Ciudad:</strong> ${p.domicilio?.ciudad || "—"}</p>
-            <p><strong>Indicaciones:</strong> ${p.domicilio?.indicaciones || "Ninguna"}</p>
-            <p><strong>Pago:</strong> ${p.domicilio?.metodoPago || "—"}</p>
+    document.getElementById("modal-pedido-body").innerHTML = `
+        <div class="detalle-bloque">
+            <p class="detalle-titulo">Cliente</p>
+            <div class="detalle-row"><strong>Nombre</strong><span>${p.domicilio?.nombre || "—"}</span></div>
+            <div class="detalle-row"><strong>Correo</strong><span>${p.usuarioEmail}</span></div>
+            <div class="detalle-row"><strong>Teléfono</strong><span>${p.domicilio?.telefono || "—"}</span></div>
+            <div style="margin-top:0.8rem">
+                <a href="tel:${tel}" class="btn-tel">📞 Llamar</a>
+                <a href="https://wa.me/57${tel}?text=${waMsg}" target="_blank" rel="noopener" class="btn-wa">💬 WhatsApp</a>
+            </div>
         </div>
 
-        <div class="detalle-seccion">
-            <h4>Productos</h4>
-            ${productosHtml}
-            <div class="detalle-total">
+        <div class="detalle-bloque">
+            <p class="detalle-titulo">Entrega</p>
+            <div class="detalle-row"><strong>Dirección</strong><span>${p.domicilio?.direccion || "—"}</span></div>
+            <div class="detalle-row"><strong>Ciudad</strong><span>${p.domicilio?.ciudad || "—"}</span></div>
+            <div class="detalle-row"><strong>Indicaciones</strong><span>${p.domicilio?.indicaciones || "Ninguna"}</span></div>
+            <div class="detalle-row"><strong>Pago</strong><span>${p.domicilio?.metodoPago || "—"}</span></div>
+            <div class="detalle-row"><strong>Fecha</strong><span>${formatFecha(p.creadoEn, "long")}</span></div>
+        </div>
+
+        <div class="detalle-bloque">
+            <p class="detalle-titulo">Productos</p>
+            ${prodsHtml}
+            <div class="prod-total">
                 <span>Total</span>
-                <span>$${Number(p.total || 0).toLocaleString("es-CO")}</span>
+                <span>$ ${Number(p.total || 0).toLocaleString("es-CO")}</span>
             </div>
         </div>
 
-        <div class="detalle-seccion">
-            <h4>Cambiar estado</h4>
-            <p class="pedido-fecha">Pedido recibido: ${fecha}</p>
-            <div class="estado-botones">
-                <button onclick="cambiarEstado('${p.id}', 'pendiente')"
-                    class="btn-estado ${p.estado === 'pendiente' ? 'active' : ''}">Pendiente</button>
-                <button onclick="cambiarEstado('${p.id}', 'en camino')"
-                    class="btn-estado ${p.estado === 'en camino' ? 'active' : ''}">En camino</button>
-                <button onclick="cambiarEstado('${p.id}', 'entregado')"
-                    class="btn-estado ${p.estado === 'entregado' ? 'active' : ''}">Entregado</button>
-                <button onclick="cambiarEstado('${p.id}', 'cancelado')"
-                    class="btn-estado btn-cancelar ${p.estado === 'cancelado' ? 'active' : ''}">Cancelado</button>
+        <div class="detalle-bloque">
+            <p class="detalle-titulo">Estado del pedido</p>
+            <div class="estado-btns">
+                <button class="btn-estado ${estado === 'pendiente'  ? 'activo' : ''}" data-nuevo="pendiente">Pendiente</button>
+                <button class="btn-estado ${estado === 'en camino'  ? 'activo' : ''}" data-nuevo="en camino">En camino</button>
+                <button class="btn-estado ${estado === 'entregado'  ? 'activo' : ''}" data-nuevo="entregado">Entregado</button>
+                <button class="btn-estado btn-cancelar ${estado === 'cancelado' ? 'activo' : ''}" data-nuevo="cancelado">Cancelado</button>
             </div>
+            <button class="btn-eliminar-pedido" data-id="${id}">🗑 Eliminar pedido</button>
         </div>
     `;
 
+    // Eventos botones de estado
+    document.querySelectorAll(".btn-estado").forEach(btn => {
+        btn.addEventListener("click", () => cambiarEstado(id, btn.dataset.nuevo));
+    });
+
+    document.querySelector(".btn-eliminar-pedido").addEventListener("click", () => {
+        eliminarPedido(id);
+    });
+
     document.getElementById("modal-overlay").classList.remove("hidden");
     document.getElementById("modal-pedido").classList.remove("hidden");
-};
+}
 
-// ── Cambiar estado del pedido ─────────────────────────────────
-window.cambiarEstado = async function (id, nuevoEstado) {
+async function cambiarEstado(id, nuevoEstado) {
     try {
         await updateDoc(doc(db, "pedidos", id), { estado: nuevoEstado });
-        const pedido = todosPedidos.find(p => p.id === id);
-        if (pedido) pedido.estado = nuevoEstado;
+        const p = todosPedidos.find(x => x.id === id);
+        if (p) p.estado = nuevoEstado;
         actualizarStats();
-        cerrarModal();
-        const filtrados = filtroActual === "todos"
+        cerrarModales();
+        const lista = filtroActual === "todos"
             ? todosPedidos
             : todosPedidos.filter(p => p.estado === filtroActual);
-        renderPedidos(filtrados);
+        renderPedidos(lista);
+        toast(`Estado actualizado: ${nuevoEstado}`, "ok");
     } catch (err) {
-        alert("Error al actualizar: " + err.message);
+        toast("Error al cambiar estado: " + err.message, "error");
     }
-};
+}
 
-window.cerrarModal = function () {
-    document.getElementById("modal-overlay").classList.add("hidden");
-    document.getElementById("modal-pedido").classList.add("hidden");
-};
+async function eliminarPedido(id) {
+    const p = todosPedidos.find(x => x.id === id);
+    const nombre = p?.domicilio?.nombre || p?.usuarioEmail || "este pedido";
+    if (!confirm(`¿Eliminar el pedido de "${nombre}"?\nEsta acción no se puede deshacer.`)) return;
+    try {
+        await deleteDoc(doc(db, "pedidos", id));
+        todosPedidos = todosPedidos.filter(x => x.id !== id);
+        actualizarStats();
+        cerrarModales();
+        const lista = filtroActual === "todos"
+            ? todosPedidos
+            : todosPedidos.filter(p => p.estado === filtroActual);
+        renderPedidos(lista);
+        toast("Pedido eliminado", "ok");
+    } catch (err) {
+        toast("Error al eliminar: " + err.message, "error");
+    }
+}
+
+// ════════════════════════════════════════════════════════════
+//  PRODUCTOS
+// ════════════════════════════════════════════════════════════
+
+async function cargarProductos() {
+    try {
+        const snap = await getDocs(query(collection(db, "productos"), orderBy("nombre")));
+        todosProductos = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        renderProductos(todosProductos);
+    } catch {
+        // Fallback sin ordenación si no hay índice
+        try {
+            const snap2 = await getDocs(collection(db, "productos"));
+            todosProductos = snap2.docs.map(d => ({ id: d.id, ...d.data() }));
+            renderProductos(todosProductos);
+        } catch (err2) {
+            document.getElementById("productos-grid").innerHTML =
+                `<p class="msg-centro" style="color:#c62828">Error al cargar productos: ${err2.message}</p>`;
+        }
+    }
+}
+
+function renderProductos(lista) {
+    const grid = document.getElementById("productos-grid");
+
+    if (!lista.length) {
+        grid.innerHTML = `<p class="msg-centro">No hay productos registrados.</p>`;
+        return;
+    }
+
+    grid.innerHTML = lista.map(p => {
+        const imgHtml = p.imagen
+            ? `<img class="prod-img" src="${p.imagen}" alt="${p.nombre}"
+                    onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`
+            : "";
+        const placeholder = `<div class="prod-img-placeholder" ${p.imagen ? 'style="display:none"' : ""}>🍫</div>`;
+        const dispHtml = p.disponible !== false
+            ? `<span class="prod-disponible">● Disponible</span>`
+            : `<span class="prod-no-disponible">● No disponible</span>`;
+
+        return `
+        <div class="producto-card">
+            ${imgHtml}${placeholder}
+            <div class="prod-info">
+                <p class="prod-nombre">${p.nombre || "Sin nombre"}</p>
+                <p class="prod-desc">${p.descripcion || ""}</p>
+                <div class="prod-meta">
+                    <span class="prod-precio">$ ${Number(p.precio || 0).toLocaleString("es-CO")}</span>
+                    <span class="prod-categoria">${p.categoria || "—"}</span>
+                </div>
+                ${dispHtml}
+            </div>
+            <div class="prod-actions">
+                <button class="btn-editar-prod"   data-id="${p.id}">✏ Editar</button>
+                <button class="btn-eliminar-prod" data-id="${p.id}">🗑 Eliminar</button>
+            </div>
+        </div>`;
+    }).join("");
+
+    grid.querySelectorAll(".btn-editar-prod").forEach(btn => {
+        btn.addEventListener("click", () => abrirFormProducto(btn.dataset.id));
+    });
+    grid.querySelectorAll(".btn-eliminar-prod").forEach(btn => {
+        btn.addEventListener("click", () => eliminarProducto(btn.dataset.id));
+    });
+}
+
+async function eliminarProducto(id) {
+    const p = todosProductos.find(x => x.id === id);
+    if (!confirm(`¿Eliminar "${p?.nombre || "este producto"}"?\nEsta acción no se puede deshacer.`)) return;
+    try {
+        await deleteDoc(doc(db, "productos", id));
+        todosProductos = todosProductos.filter(x => x.id !== id);
+        renderProductos(todosProductos);
+        toast(`"${p?.nombre}" eliminado`, "ok");
+    } catch (err) {
+        toast("Error al eliminar: " + err.message, "error");
+    }
+}
+
+// ════════════════════════════════════════════════════════════
+//  FORMULARIO PRODUCTO + UPLOAD DE IMAGEN
+// ════════════════════════════════════════════════════════════
+
+document.getElementById("btn-nuevo-producto").addEventListener("click", () => abrirFormProducto(null));
+
+function abrirFormProducto(id) {
+    const p = id ? todosProductos.find(x => x.id === id) : null;
+
+    document.getElementById("modal-producto-titulo").textContent = p ? "Editar Producto" : "Nuevo Producto";
+    document.getElementById("prod-id").value           = p?.id          || "";
+    document.getElementById("prod-nombre").value       = p?.nombre      || "";
+    document.getElementById("prod-descripcion").value  = p?.descripcion || "";
+    document.getElementById("prod-precio").value       = p?.precio      || "";
+    document.getElementById("prod-categoria").value    = p?.categoria   || "";
+    document.getElementById("prod-imagen-url").value   = p?.imagen      || "";
+    document.getElementById("prod-disponible").checked = p?.disponible !== false;
+
+    // Resetear área de upload
+    resetUploadArea();
+
+    // Si hay imagen existente, mostrar preview
+    if (p?.imagen) {
+        mostrarPreview(p.imagen);
+    }
+
+    document.getElementById("modal-overlay").classList.remove("hidden");
+    document.getElementById("modal-producto").classList.remove("hidden");
+}
+
+// ── Upload área ───────────────────────────────────────────────
+const fileInput   = document.getElementById("prod-imagen-file");
+const uploadArea  = document.getElementById("upload-area");
+
+fileInput.addEventListener("change", e => {
+    const file = e.target.files[0];
+    if (file) handleFileSelected(file);
+});
+
+// Drag & drop
+uploadArea.addEventListener("dragover",  e => { e.preventDefault(); uploadArea.classList.add("dragover"); });
+uploadArea.addEventListener("dragleave", () => uploadArea.classList.remove("dragover"));
+uploadArea.addEventListener("drop", e => {
+    e.preventDefault();
+    uploadArea.classList.remove("dragover");
+    const file = e.dataTransfer.files[0];
+    if (file && file.type.startsWith("image/")) handleFileSelected(file);
+});
+
+document.getElementById("upload-remove").addEventListener("click", e => {
+    e.stopPropagation();
+    resetUploadArea();
+    document.getElementById("prod-imagen-url").value = "";
+    fileInput.value = "";
+});
+
+function handleFileSelected(file) {
+    if (file.size > 5 * 1024 * 1024) {
+        toast("La imagen supera los 5 MB", "error");
+        return;
+    }
+    // Mostrar preview local inmediato
+    const reader = new FileReader();
+    reader.onload = e => mostrarPreview(e.target.result);
+    reader.readAsDataURL(file);
+}
+
+function mostrarPreview(src) {
+    document.getElementById("upload-placeholder").classList.add("hidden");
+    document.getElementById("upload-progress").classList.add("hidden");
+    document.getElementById("upload-preview").classList.remove("hidden");
+    document.getElementById("preview-img").src = src;
+}
+
+function resetUploadArea() {
+    document.getElementById("upload-placeholder").classList.remove("hidden");
+    document.getElementById("upload-preview").classList.add("hidden");
+    document.getElementById("upload-progress").classList.add("hidden");
+    document.getElementById("progress-fill").style.width = "0%";
+    document.getElementById("progress-text").textContent = "Subiendo...";
+}
+
+/** Sube el archivo a Firebase Storage y devuelve la URL */
+async function subirImagen(file) {
+    return new Promise((resolve, reject) => {
+        const nombreArchivo = `productos/${Date.now()}_${file.name.replace(/\s+/g, "_")}`;
+        const storageRef    = ref(storage, nombreArchivo);
+        const uploadTask    = uploadBytesResumable(storageRef, file);
+
+        // Mostrar barra de progreso
+        document.getElementById("upload-preview").classList.add("hidden");
+        document.getElementById("upload-progress").classList.remove("hidden");
+
+        uploadTask.on("state_changed",
+            snapshot => {
+                const pct = Math.round((snapshot.bytesTransferred / snapshot.totalBytes) * 100);
+                document.getElementById("progress-fill").style.width = `${pct}%`;
+                document.getElementById("progress-text").textContent = `Subiendo... ${pct}%`;
+            },
+            err => reject(err),
+            async () => {
+                const url = await getDownloadURL(uploadTask.snapshot.ref);
+                resolve(url);
+            }
+        );
+    });
+}
+
+// ── Submit del formulario ─────────────────────────────────────
+document.getElementById("form-producto").addEventListener("submit", async e => {
+    e.preventDefault();
+
+    const id          = document.getElementById("prod-id").value;
+    const nombre      = document.getElementById("prod-nombre").value.trim();
+    const descripcion = document.getElementById("prod-descripcion").value.trim();
+    const precio      = parseFloat(document.getElementById("prod-precio").value);
+    const categoria   = document.getElementById("prod-categoria").value;
+    const disponible  = document.getElementById("prod-disponible").checked;
+    const file        = fileInput.files[0];
+
+    if (!nombre || !descripcion || isNaN(precio) || !categoria) {
+        toast("Completa todos los campos obligatorios", "error");
+        return;
+    }
+
+    const btnGuardar = document.getElementById("btn-guardar-prod");
+    btnGuardar.textContent = "Guardando...";
+    btnGuardar.disabled    = true;
+
+    try {
+        let imagenUrl = document.getElementById("prod-imagen-url").value;
+
+        // Si hay archivo nuevo, subirlo a Storage
+        if (file) {
+            imagenUrl = await subirImagen(file);
+        }
+
+        const datos = { nombre, descripcion, precio, categoria, disponible, imagen: imagenUrl };
+
+        if (id) {
+            await updateDoc(doc(db, "productos", id), datos);
+            toast(`"${nombre}" actualizado`, "ok");
+        } else {
+            await addDoc(collection(db, "productos"), datos);
+            toast(`"${nombre}" creado`, "ok");
+        }
+
+        cerrarModales();
+        await cargarProductos();
+    } catch (err) {
+        toast("Error al guardar: " + err.message, "error");
+    } finally {
+        btnGuardar.textContent = "Guardar producto";
+        btnGuardar.disabled    = false;
+    }
+});
+
+document.getElementById("btn-cancelar-prod").addEventListener("click", cerrarModales);
+
+// ════════════════════════════════════════════════════════════
+//  CERRAR MODALES
+// ════════════════════════════════════════════════════════════
+
+document.getElementById("modal-pedido-close").addEventListener("click",   cerrarModales);
+document.getElementById("modal-producto-close").addEventListener("click", cerrarModales);
+document.getElementById("modal-overlay").addEventListener("click",        cerrarModales);
+
+document.addEventListener("keydown", e => {
+    if (e.key === "Escape") cerrarModales();
+});

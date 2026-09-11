@@ -4,720 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>URAKAO — Panel Admin</title>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-
-        :root {
-            /* Paleta oficial URAKAO — Manual de Marca */
-            --cafe-oscuro:  #432818;
-            --cafe-medio:   #5D3A1A;
-            --crema:        #ECE8DB;
-            --verde:        #8BA040;
-            --rojo:         #BC4749;
-            --marfil:       #F5F2EC;
-            --dorado:       #BC4749;   /* reemplaza dorado por el rojo del manual */
-            --chocolate:    #432818;
-            --cafe:         #5D3A1A;
-            --tierra:       #5D3A1A;
-        }
-
-        body {
-            font-family: system-ui, sans-serif;
-            background: var(--marfil);
-            min-height: 100vh;
-            color: var(--chocolate);
-        }
-
-        .hidden { display: none !important; }
-
-        /* ── Navbar ── */
-        .admin-nav {
-            background: var(--chocolate);
-            padding: 0 2rem;
-            height: 64px;
-            position: fixed;
-            width: 100%;
-            top: 0;
-            z-index: 200;
-            display: flex;
-            align-items: center;
-            gap: 1.2rem;
-        }
-
-        .admin-nav img {
-            height: 40px;
-            width: auto;
-            object-fit: contain;
-            border-radius: 2px;
-        }
-
-        .admin-badge {
-            background: var(--dorado);
-            color: white;
-            font-size: 0.65rem;
-            letter-spacing: 2.5px;
-            padding: 0.25rem 0.75rem;
-            text-transform: uppercase;
-            font-weight: 600;
-        }
-
-        .nav-right {
-            margin-left: auto;
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-        }
-
-        .admin-email {
-            color: var(--crema);
-            font-size: 0.82rem;
-            opacity: 0.8;
-        }
-
-        .btn-salir {
-            background: none;
-            border: 1px solid rgba(255,255,255,0.25);
-            color: var(--crema);
-            padding: 0.35rem 1.1rem;
-            font-family: Georgia, serif;
-            font-size: 0.8rem;
-            cursor: pointer;
-            letter-spacing: 1px;
-            transition: all 0.2s;
-        }
-
-        .btn-salir:hover { background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.5); }
-
-        /* ── Tabs ── */
-        .tabs-bar {
-            position: fixed;
-            top: 64px;
-            width: 100%;
-            background: var(--cafe);
-            z-index: 190;
-            display: flex;
-            border-bottom: 2px solid var(--dorado);
-        }
-
-        .tab-btn {
-            padding: 0.85rem 2.5rem;
-            background: none;
-            border: none;
-            color: rgba(248,244,238,0.55);
-            font-family: Georgia, serif;
-            font-size: 0.88rem;
-            letter-spacing: 2px;
-            text-transform: uppercase;
-            cursor: pointer;
-            transition: all 0.2s;
-            border-bottom: 3px solid transparent;
-            margin-bottom: -2px;
-        }
-
-        .tab-btn:hover { color: var(--crema); }
-
-        .tab-btn.active {
-            color: var(--dorado);
-            border-bottom-color: var(--dorado);
-        }
-
-        /* ── Main ── */
-        .admin-main {
-            max-width: 1400px;
-            margin: 0 auto;
-            padding: 120px 2rem 3rem;
-        }
-
-        /* ── Stats ── */
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 1rem;
-            margin-bottom: 2rem;
-        }
-
-        .stat-card {
-            background: white;
-            padding: 1.5rem;
-            border-top: 3px solid var(--dorado);
-            display: flex;
-            flex-direction: column;
-            gap: 0.4rem;
-            box-shadow: 0 2px 8px rgba(44,24,16,0.06);
-        }
-
-        .stat-num {
-            font-size: 2rem;
-            font-weight: 700;
-            color: var(--chocolate);
-            line-height: 1;
-            font-family: Georgia, serif;
-        }
-
-        .stat-lbl {
-            font-size: 0.7rem;
-            letter-spacing: 2px;
-            color: var(--tierra);
-            text-transform: uppercase;
-        }
-
-        /* ── Section header ── */
-        .seccion-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 1.4rem;
-            flex-wrap: wrap;
-            gap: 0.8rem;
-        }
-
-        .seccion-header h2 {
-            font-family: Georgia, serif;
-            font-size: 1.4rem;
-            letter-spacing: 2px;
-            color: var(--chocolate);
-        }
-
-        /* ── Filtros ── */
-        .filtros {
-            display: flex;
-            gap: 0.4rem;
-            flex-wrap: wrap;
-        }
-
-        .filtro-btn {
-            background: white;
-            border: 1px solid var(--crema);
-            padding: 0.38rem 0.95rem;
-            font-family: Georgia, serif;
-            font-size: 0.78rem;
-            cursor: pointer;
-            color: var(--cafe-medio);
-            transition: all 0.2s;
-            letter-spacing: 0.5px;
-        }
-
-        .filtro-btn:hover { border-color: var(--dorado); color: var(--dorado); }
-
-        .filtro-btn.active {
-            background: var(--chocolate);
-            border-color: var(--chocolate);
-            color: white;
-        }
-
-        /* ── Pedidos grid ── */
-        .pedidos-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
-            gap: 1rem;
-        }
-
-        .pedido-card {
-            background: white;
-            border: 1px solid var(--crema);
-            cursor: pointer;
-            transition: transform 0.2s, box-shadow 0.2s;
-            overflow: hidden;
-            box-shadow: 0 2px 6px rgba(44,24,16,0.05);
-        }
-
-        .pedido-card:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 8px 24px rgba(44,24,16,0.12);
-        }
-
-        .pc-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            padding: 1rem 1.2rem 0.7rem;
-            border-bottom: 1px solid var(--crema);
-        }
-
-        .pc-nombre {
-            font-size: 1rem;
-            font-weight: 600;
-            color: var(--chocolate);
-            margin-bottom: 0.25rem;
-            font-family: Georgia, serif;
-        }
-
-        .pc-contacto { font-size: 0.78rem; color: var(--cafe-medio); }
-
-        .pc-body { padding: 0.7rem 1.2rem; }
-
-        .pc-dir {
-            font-size: 0.82rem;
-            color: var(--cafe-medio);
-            margin-bottom: 0.3rem;
-        }
-
-        .pc-productos {
-            font-size: 0.78rem;
-            color: var(--dorado);
-            font-style: italic;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-
-        .pc-footer {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 0.6rem 1.2rem;
-            background: var(--marfil);
-            border-top: 1px solid var(--crema);
-        }
-
-        .pc-fecha { font-size: 0.75rem; color: var(--tierra); }
-        .pc-total { font-size: 0.95rem; font-weight: 700; color: var(--chocolate); font-family: Georgia, serif; }
-
-        /* ── Badges ── */
-        .badge {
-            font-size: 0.65rem;
-            letter-spacing: 1px;
-            text-transform: uppercase;
-            padding: 0.25rem 0.65rem;
-            font-weight: 700;
-            white-space: nowrap;
-            flex-shrink: 0;
-        }
-
-        .badge-pendiente { background: #FFF3E0; color: #E65100; }
-        .badge-en-camino { background: #E3F2FD; color: #1565C0; }
-        .badge-entregado  { background: #E8F5E9; color: #2E7D32; }
-        .badge-cancelado  { background: #FFEBEE; color: #C62828; }
-
-        /* ── Productos grid ── */
-        .productos-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-            gap: 1.2rem;
-        }
-
-        .producto-card {
-            background: white;
-            border: 1px solid var(--crema);
-            overflow: hidden;
-            box-shadow: 0 2px 6px rgba(44,24,16,0.05);
-            display: flex;
-            flex-direction: column;
-        }
-
-        .prod-img {
-            width: 100%;
-            height: 180px;
-            object-fit: cover;
-            background: var(--crema);
-            display: block;
-        }
-
-        .prod-img-placeholder {
-            width: 100%;
-            height: 180px;
-            background: var(--crema);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 2.5rem;
-            color: var(--tierra);
-        }
-
-        .prod-info {
-            padding: 1rem 1.1rem;
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            gap: 0.35rem;
-        }
-
-        .prod-nombre {
-            font-family: Georgia, serif;
-            font-size: 1rem;
-            font-weight: 600;
-            color: var(--chocolate);
-        }
-
-        .prod-desc {
-            font-size: 0.8rem;
-            color: var(--cafe-medio);
-            line-height: 1.5;
-            flex: 1;
-            display: -webkit-box;
-            -webkit-line-clamp: 2;
-            -webkit-box-orient: vertical;
-            overflow: hidden;
-        }
-
-        .prod-meta {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-top: 0.4rem;
-        }
-
-        .prod-precio {
-            font-family: Georgia, serif;
-            font-size: 1.05rem;
-            font-weight: 700;
-            color: var(--dorado);
-        }
-
-        .prod-categoria {
-            font-size: 0.65rem;
-            letter-spacing: 1.5px;
-            text-transform: uppercase;
-            background: var(--crema);
-            color: var(--tierra);
-            padding: 0.2rem 0.55rem;
-        }
-
-        .prod-disponible {
-            font-size: 0.7rem;
-            color: #2E7D32;
-            font-weight: 600;
-        }
-
-        .prod-no-disponible {
-            font-size: 0.7rem;
-            color: #C62828;
-            font-weight: 600;
-        }
-
-        .prod-actions {
-            display: flex;
-            border-top: 1px solid var(--crema);
-        }
-
-        .prod-actions button {
-            flex: 1;
-            padding: 0.65rem;
-            border: none;
-            background: none;
-            font-family: Georgia, serif;
-            font-size: 0.8rem;
-            cursor: pointer;
-            letter-spacing: 0.5px;
-            transition: background 0.2s;
-        }
-
-        .btn-editar-prod {
-            color: var(--cafe);
-            border-right: 1px solid var(--crema);
-        }
-
-        .btn-editar-prod:hover { background: var(--crema); }
-
-        .btn-eliminar-prod { color: #C62828; }
-        .btn-eliminar-prod:hover { background: #FFEBEE; }
-
-        /* ── Botón nuevo producto ── */
-        .btn-nuevo {
-            background: var(--chocolate);
-            color: white;
-            border: none;
-            padding: 0.6rem 1.4rem;
-            font-family: Georgia, serif;
-            font-size: 0.85rem;
-            letter-spacing: 1px;
-            cursor: pointer;
-            transition: background 0.2s;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .btn-nuevo:hover { background: var(--cafe); }
-
-        /* ── Modal ── */
-        .modal-overlay {
-            position: fixed;
-            inset: 0;
-            background: rgba(0,0,0,0.55);
-            z-index: 500;
-        }
-
-        .modal {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: white;
-            width: 92%;
-            max-width: 560px;
-            max-height: 90vh;
-            overflow-y: auto;
-            z-index: 600;
-            box-shadow: 0 20px 60px rgba(44,24,16,0.3);
-        }
-
-        .modal-head {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 1.2rem 1.5rem;
-            border-bottom: 1px solid var(--crema);
-            position: sticky;
-            top: 0;
-            background: white;
-            z-index: 1;
-        }
-
-        .modal-head h3 {
-            font-family: Georgia, serif;
-            font-size: 1rem;
-            letter-spacing: 1px;
-            color: var(--chocolate);
-        }
-
-        .modal-close {
-            background: none;
-            border: none;
-            font-size: 1.1rem;
-            cursor: pointer;
-            color: var(--tierra);
-            padding: 0.2rem 0.5rem;
-            transition: color 0.2s;
-        }
-
-        .modal-close:hover { color: var(--chocolate); }
-
-        .modal-body { padding: 1.5rem; }
-
-        .detalle-bloque {
-            margin-bottom: 1.4rem;
-            padding-bottom: 1.4rem;
-            border-bottom: 1px solid var(--crema);
-        }
-
-        .detalle-bloque:last-child { border-bottom: none; margin-bottom: 0; }
-
-        .detalle-titulo {
-            font-size: 0.65rem;
-            letter-spacing: 3px;
-            text-transform: uppercase;
-            color: var(--dorado);
-            margin-bottom: 0.8rem;
-            font-weight: 600;
-        }
-
-        .detalle-row {
-            display: flex;
-            gap: 0.5rem;
-            margin-bottom: 0.4rem;
-            font-size: 0.88rem;
-        }
-
-        .detalle-row strong { color: var(--chocolate); min-width: 95px; flex-shrink: 0; }
-        .detalle-row span   { color: var(--cafe-medio); }
-
-        .btn-tel {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.4rem;
-            background: var(--chocolate);
-            color: white;
-            padding: 0.5rem 1rem;
-            text-decoration: none;
-            font-size: 0.85rem;
-            margin-right: 0.5rem;
-            margin-top: 0.5rem;
-            transition: background 0.2s;
-        }
-
-        .btn-tel:hover { background: var(--cafe); }
-
-        .btn-wa {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.4rem;
-            background: #25D366;
-            color: white;
-            padding: 0.5rem 1rem;
-            text-decoration: none;
-            font-size: 0.85rem;
-            margin-top: 0.5rem;
-            transition: background 0.2s;
-        }
-
-        .btn-wa:hover { background: #1ebe5d; }
-
-        .prod-row {
-            display: flex;
-            justify-content: space-between;
-            padding: 0.45rem 0;
-            border-bottom: 1px solid var(--crema);
-            font-size: 0.87rem;
-            color: var(--cafe-medio);
-        }
-
-        .prod-total {
-            display: flex;
-            justify-content: space-between;
-            font-weight: 700;
-            color: var(--chocolate);
-            padding-top: 0.7rem;
-            font-size: 0.95rem;
-            font-family: Georgia, serif;
-        }
-
-        .estado-btns {
-            display: flex;
-            gap: 0.4rem;
-            flex-wrap: wrap;
-            margin-top: 0.8rem;
-        }
-
-        .btn-estado {
-            padding: 0.45rem 0.9rem;
-            border: 1px solid var(--crema);
-            background: white;
-            font-family: Georgia, serif;
-            font-size: 0.78rem;
-            cursor: pointer;
-            color: var(--cafe-medio);
-            transition: all 0.2s;
-            letter-spacing: 0.5px;
-        }
-
-        .btn-estado:hover { border-color: var(--dorado); color: var(--dorado); }
-        .btn-estado.activo { background: var(--chocolate); color: white; border-color: var(--chocolate); }
-        .btn-cancelar.activo { background: #C62828; border-color: #C62828; }
-
-        /* ── Botón eliminar pedido ── */
-        .btn-eliminar-pedido {
-            display: block;
-            width: 100%;
-            margin-top: 1.2rem;
-            padding: 0.65rem;
-            background: none;
-            border: 1px solid #C62828;
-            color: #C62828;
-            font-family: Georgia, serif;
-            font-size: 0.82rem;
-            letter-spacing: 1px;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .btn-eliminar-pedido:hover { background: #FFEBEE; }
-
-        /* ── Formulario producto ── */
-        .form-grupo {
-            margin-bottom: 1.1rem;
-        }
-
-        .form-grupo label {
-            display: block;
-            font-size: 0.72rem;
-            letter-spacing: 2px;
-            text-transform: uppercase;
-            color: var(--tierra);
-            margin-bottom: 0.4rem;
-            font-weight: 600;
-        }
-
-        .form-grupo input,
-        .form-grupo textarea,
-        .form-grupo select {
-            width: 100%;
-            padding: 0.6rem 0.8rem;
-            border: 1px solid var(--crema);
-            background: var(--marfil);
-            font-family: system-ui, sans-serif;
-            font-size: 0.9rem;
-            color: var(--chocolate);
-            outline: none;
-            transition: border-color 0.2s;
-        }
-
-        .form-grupo input:focus,
-        .form-grupo textarea:focus,
-        .form-grupo select:focus {
-            border-color: var(--dorado);
-        }
-
-        .form-grupo textarea { resize: vertical; min-height: 80px; }
-
-        .form-check {
-            display: flex;
-            align-items: center;
-            gap: 0.6rem;
-            font-size: 0.88rem;
-            color: var(--cafe-medio);
-            cursor: pointer;
-        }
-
-        .form-check input[type="checkbox"] {
-            width: 16px;
-            height: 16px;
-            accent-color: var(--dorado);
-            cursor: pointer;
-        }
-
-        .form-actions {
-            display: flex;
-            gap: 0.8rem;
-            margin-top: 1.4rem;
-        }
-
-        .btn-guardar {
-            flex: 1;
-            padding: 0.7rem;
-            background: var(--chocolate);
-            color: white;
-            border: none;
-            font-family: Georgia, serif;
-            font-size: 0.88rem;
-            letter-spacing: 1px;
-            cursor: pointer;
-            transition: background 0.2s;
-        }
-
-        .btn-guardar:hover { background: var(--cafe); }
-
-        .btn-cancelar-form {
-            padding: 0.7rem 1.2rem;
-            background: none;
-            border: 1px solid var(--crema);
-            color: var(--cafe-medio);
-            font-family: Georgia, serif;
-            font-size: 0.88rem;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .btn-cancelar-form:hover { border-color: var(--tierra); color: var(--tierra); }
-
-        /* ── Vacíos / loading ── */
-        .msg-centro {
-            text-align: center;
-            padding: 4rem 2rem;
-            color: var(--tierra);
-            font-style: italic;
-            grid-column: 1 / -1;
-        }
-
-        /* ── Responsive ── */
-        @media (max-width: 900px) {
-            .stats-grid { grid-template-columns: repeat(2, 1fr); }
-        }
-
-        @media (max-width: 600px) {
-            .stats-grid { grid-template-columns: 1fr 1fr; }
-            .pedidos-grid { grid-template-columns: 1fr; }
-            .productos-grid { grid-template-columns: 1fr; }
-            .admin-email { display: none; }
-            .tab-btn { padding: 0.75rem 1.2rem; font-size: 0.78rem; }
-        }
-    </style>
+    <link rel="stylesheet" href="/src/css/admin.css">
 </head>
 <body>
 
-    <!-- Navbar -->
+    <!-- ══ NAVBAR ══════════════════════════════════════════════ -->
     <nav class="admin-nav">
-        <img src="/Logo Oficial.jpeg" alt="URAKAO">
+        <img src="/Fotos de Urakao Oficial/LOGOS color hueso.png" alt="URAKAO">
         <span class="admin-badge">Admin</span>
         <div class="nav-right">
             <span class="admin-email" id="admin-email"></span>
@@ -725,18 +18,18 @@
         </div>
     </nav>
 
-    <!-- Tabs -->
+    <!-- ══ TABS ════════════════════════════════════════════════ -->
     <div class="tabs-bar">
         <button class="tab-btn active" data-tab="pedidos">Pedidos</button>
         <button class="tab-btn" data-tab="productos">Productos</button>
     </div>
 
+    <!-- ══ CONTENIDO PRINCIPAL ═════════════════════════════════ -->
     <main class="admin-main">
 
-        <!-- ══════════ PESTAÑA PEDIDOS ══════════ -->
-        <div id="tab-pedidos">
+        <!-- ── Pestaña Pedidos ── -->
+        <section id="tab-pedidos">
 
-            <!-- Stats -->
             <div class="stats-grid">
                 <div class="stat-card">
                     <span class="stat-num" id="stat-total">—</span>
@@ -756,7 +49,6 @@
                 </div>
             </div>
 
-            <!-- Filtros -->
             <div class="seccion-header">
                 <h2>Pedidos</h2>
                 <div class="filtros">
@@ -768,61 +60,62 @@
                 </div>
             </div>
 
-            <!-- Grid pedidos -->
             <div id="pedidos-grid" class="pedidos-grid">
                 <p class="msg-centro">Cargando pedidos...</p>
             </div>
-        </div>
+        </section>
 
-        <!-- ══════════ PESTAÑA PRODUCTOS ══════════ -->
-        <div id="tab-productos" class="hidden">
+        <!-- ── Pestaña Productos ── -->
+        <section id="tab-productos" class="hidden">
 
             <div class="seccion-header">
                 <h2>Productos</h2>
-                <button class="btn-nuevo" id="btn-nuevo-producto">
-                    <span>+</span> Nuevo Producto
-                </button>
+                <button class="btn-nuevo" id="btn-nuevo-producto">+ Nuevo Producto</button>
             </div>
 
-            <!-- Grid productos -->
             <div id="productos-grid" class="productos-grid">
                 <p class="msg-centro">Cargando productos...</p>
             </div>
-        </div>
+        </section>
 
     </main>
 
-    <!-- ── Modal pedido ── -->
+    <!-- ══ MODAL PEDIDO ════════════════════════════════════════ -->
     <div id="modal-overlay" class="modal-overlay hidden"></div>
-    <div id="modal-pedido" class="modal hidden">
+
+    <div id="modal-pedido" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="modal-pedido-titulo">
         <div class="modal-head">
             <h3 id="modal-pedido-titulo">Detalle del pedido</h3>
-            <button class="modal-close" id="modal-pedido-close">✕</button>
+            <button class="modal-close" id="modal-pedido-close" aria-label="Cerrar">✕</button>
         </div>
         <div id="modal-pedido-body" class="modal-body"></div>
     </div>
 
-    <!-- ── Modal producto (formulario) ── -->
-    <div id="modal-producto" class="modal hidden">
+    <!-- ══ MODAL PRODUCTO ══════════════════════════════════════ -->
+    <div id="modal-producto" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="modal-producto-titulo">
         <div class="modal-head">
             <h3 id="modal-producto-titulo">Nuevo Producto</h3>
-            <button class="modal-close" id="modal-producto-close">✕</button>
+            <button class="modal-close" id="modal-producto-close" aria-label="Cerrar">✕</button>
         </div>
         <div class="modal-body">
             <form id="form-producto" novalidate>
                 <input type="hidden" id="prod-id">
+
                 <div class="form-grupo">
                     <label for="prod-nombre">Nombre</label>
                     <input type="text" id="prod-nombre" required placeholder="Ej. Bombón de maracuyá">
                 </div>
+
                 <div class="form-grupo">
                     <label for="prod-descripcion">Descripción</label>
                     <textarea id="prod-descripcion" required placeholder="Describe el producto..."></textarea>
                 </div>
+
                 <div class="form-grupo">
                     <label for="prod-precio">Precio (COP)</label>
                     <input type="number" id="prod-precio" required min="0" placeholder="Ej. 15000">
                 </div>
+
                 <div class="form-grupo">
                     <label for="prod-categoria">Categoría</label>
                     <select id="prod-categoria" required>
@@ -834,16 +127,37 @@
                         <option value="cajas">Cajas</option>
                     </select>
                 </div>
+
                 <div class="form-grupo">
-                    <label for="prod-imagen">URL de imagen</label>
-                    <input type="text" id="prod-imagen" placeholder="https://...">
+                    <label for="prod-imagen">Imagen del producto</label>
+                    <div class="upload-area" id="upload-area">
+                        <input type="file" id="prod-imagen-file" accept="image/*" class="file-input">
+                        <div class="upload-placeholder" id="upload-placeholder">
+                            <span class="upload-icon">📷</span>
+                            <p>Haz clic o arrastra una imagen aquí</p>
+                            <small>JPG, PNG o WEBP · Máx. 5 MB</small>
+                        </div>
+                        <div class="upload-preview hidden" id="upload-preview">
+                            <img id="preview-img" src="" alt="Preview">
+                            <button type="button" class="upload-remove" id="upload-remove" aria-label="Quitar imagen">✕</button>
+                        </div>
+                        <div class="upload-progress hidden" id="upload-progress">
+                            <div class="progress-bar">
+                                <div class="progress-fill" id="progress-fill"></div>
+                            </div>
+                            <span id="progress-text">Subiendo...</span>
+                        </div>
+                    </div>
+                    <input type="hidden" id="prod-imagen-url">
                 </div>
+
                 <div class="form-grupo">
                     <label class="form-check">
                         <input type="checkbox" id="prod-disponible" checked>
                         Disponible para la venta
                     </label>
                 </div>
+
                 <div class="form-actions">
                     <button type="button" class="btn-cancelar-form" id="btn-cancelar-prod">Cancelar</button>
                     <button type="submit" class="btn-guardar" id="btn-guardar-prod">Guardar producto</button>
@@ -852,394 +166,10 @@
         </div>
     </div>
 
+    <!-- ══ TOAST ═══════════════════════════════════════════════ -->
+    <div id="toast-container" class="toast-container" aria-live="polite"></div>
 
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-        import { getAuth, onAuthStateChanged, signOut }
-            from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-        import { getFirestore, collection, getDocs, doc, updateDoc, deleteDoc, addDoc, query, orderBy }
-            from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-
-        // ── Firebase config ──
-        const firebaseConfig = {
-            apiKey:            "AIzaSyDjtxTIzWPNYdQQTHxNzKXf3DJ76nqHYhc",
-            authDomain:        "urakao.firebaseapp.com",
-            projectId:         "urakao",
-            storageBucket:     "urakao.firebasestorage.app",
-            messagingSenderId: "407610284432",
-            appId:             "1:407610284432:web:d0c267c2905058e866bb15"
-        };
-
-        const ADMINS = [
-            "maria.navia212@pascualbravo.edu.co",
-            "naviajimenezalejandra04@gmail.com"
-        ];
-
-        const app  = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db   = getFirestore(app);
-
-        let todosPedidos = [];
-        let filtroActual = "todos";
-
-        // ══════════════════════════════════════
-        //  AUTH GUARD
-        // ══════════════════════════════════════
-        onAuthStateChanged(auth, user => {
-            if (!user)                        { window.location.href = "/login"; return; }
-            if (!ADMINS.includes(user.email)) { window.location.href = "/";     return; }
-            document.getElementById("admin-email").textContent = user.displayName || user.email;
-            cargarPedidos();
-            cargarProductos();
-        });
-
-        document.getElementById("btn-salir").addEventListener("click", async () => {
-            await signOut(auth);
-            window.location.href = "/";
-        });
-
-        // ══════════════════════════════════════
-        //  TABS
-        // ══════════════════════════════════════
-        document.querySelectorAll(".tab-btn").forEach(btn => {
-            btn.addEventListener("click", () => {
-                document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
-                btn.classList.add("active");
-                const tab = btn.dataset.tab;
-                document.getElementById("tab-pedidos").classList.toggle("hidden",   tab !== "pedidos");
-                document.getElementById("tab-productos").classList.toggle("hidden", tab !== "productos");
-            });
-        });
-
-        // ══════════════════════════════════════
-        //  PEDIDOS
-        // ══════════════════════════════════════
-        async function cargarPedidos() {
-            try {
-                const snap = await getDocs(query(collection(db, "pedidos"), orderBy("creadoEn", "desc")));
-                todosPedidos = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-                actualizarStats();
-                renderPedidos(todosPedidos);
-            } catch (err) {
-                document.getElementById("pedidos-grid").innerHTML =
-                    `<p class="msg-centro" style="color:#c62828">Error al cargar pedidos: ${err.message}</p>`;
-            }
-        }
-
-        function actualizarStats() {
-            const pend = todosPedidos.filter(p => p.estado === "pendiente").length;
-            const entr = todosPedidos.filter(p => p.estado === "entregado").length;
-            const ing  = todosPedidos
-                .filter(p => p.estado !== "cancelado")
-                .reduce((s, p) => s + (p.total || 0), 0);
-            document.getElementById("stat-total").textContent      = todosPedidos.length;
-            document.getElementById("stat-pendientes").textContent = pend;
-            document.getElementById("stat-entregados").textContent = entr;
-            document.getElementById("stat-ingresos").textContent   =
-                "$ " + ing.toLocaleString("es-CO");
-        }
-
-        // Filtros
-        document.querySelectorAll(".filtro-btn").forEach(btn => {
-            btn.addEventListener("click", () => {
-                document.querySelectorAll(".filtro-btn").forEach(b => b.classList.remove("active"));
-                btn.classList.add("active");
-                filtroActual = btn.dataset.estado;
-                const lista = filtroActual === "todos"
-                    ? todosPedidos
-                    : todosPedidos.filter(p => p.estado === filtroActual);
-                renderPedidos(lista);
-            });
-        });
-
-        function badgeClass(estado) {
-            return { pendiente: "badge-pendiente", "en camino": "badge-en-camino",
-                     entregado: "badge-entregado", cancelado: "badge-cancelado" }[estado] || "badge-pendiente";
-        }
-
-        function renderPedidos(lista) {
-            const grid = document.getElementById("pedidos-grid");
-            if (!lista.length) {
-                grid.innerHTML = `<p class="msg-centro">No hay pedidos aquí.</p>`;
-                return;
-            }
-            grid.innerHTML = lista.map(p => {
-                const fecha  = p.creadoEn?.toDate
-                    ? p.creadoEn.toDate().toLocaleString("es-CO", { dateStyle: "short", timeStyle: "short" })
-                    : "—";
-                const estado = p.estado || "pendiente";
-                const prods  = (p.productos || []).map(i => `${i.nombre} ×${i.cantidad}`).join(" · ");
-                return `
-                <div class="pedido-card" data-id="${p.id}">
-                    <div class="pc-header">
-                        <div>
-                            <p class="pc-nombre">${p.domicilio?.nombre || p.usuarioEmail}</p>
-                            <p class="pc-contacto">📞 ${p.domicilio?.telefono || "—"} &nbsp;·&nbsp; ✉️ ${p.usuarioEmail}</p>
-                        </div>
-                        <span class="badge ${badgeClass(estado)}">${estado}</span>
-                    </div>
-                    <div class="pc-body">
-                        <p class="pc-dir">📍 ${p.domicilio?.direccion || "—"}, ${p.domicilio?.ciudad || ""}</p>
-                        <p class="pc-productos">${prods}</p>
-                    </div>
-                    <div class="pc-footer">
-                        <span class="pc-fecha">${fecha}</span>
-                        <span class="pc-total">$ ${Number(p.total || 0).toLocaleString("es-CO")}</span>
-                    </div>
-                </div>`;
-            }).join("");
-
-            document.querySelectorAll(".pedido-card").forEach(card => {
-                card.addEventListener("click", () => abrirModalPedido(card.dataset.id));
-            });
-        }
-
-        // Modal pedido
-        function abrirModalPedido(id) {
-            const p = todosPedidos.find(x => x.id === id);
-            if (!p) return;
-
-            const fecha  = p.creadoEn?.toDate
-                ? p.creadoEn.toDate().toLocaleString("es-CO", { dateStyle: "long", timeStyle: "short" })
-                : "—";
-            const tel    = (p.domicilio?.telefono || "").replace(/\s/g, "");
-            const waMsg  = encodeURIComponent(`Hola ${p.domicilio?.nombre || ""}, tu pedido URAKAO está en camino 🍫`);
-            const estado = p.estado || "pendiente";
-
-            const prodsHtml = (p.productos || []).map(i => `
-                <div class="prod-row">
-                    <span>${i.nombre} × ${i.cantidad}</span>
-                    <span>$ ${Number(i.precio * i.cantidad).toLocaleString("es-CO")}</span>
-                </div>`).join("");
-
-            document.getElementById("modal-pedido-titulo").textContent =
-                p.domicilio?.nombre || p.usuarioEmail;
-
-            document.getElementById("modal-pedido-body").innerHTML = `
-                <div class="detalle-bloque">
-                    <p class="detalle-titulo">Cliente</p>
-                    <div class="detalle-row"><strong>Nombre</strong><span>${p.domicilio?.nombre || "—"}</span></div>
-                    <div class="detalle-row"><strong>Correo</strong><span>${p.usuarioEmail}</span></div>
-                    <div class="detalle-row"><strong>Teléfono</strong><span>${p.domicilio?.telefono || "—"}</span></div>
-                    <div style="margin-top:0.8rem">
-                        <a href="tel:${tel}" class="btn-tel">📞 Llamar</a>
-                        <a href="https://wa.me/57${tel}?text=${waMsg}" target="_blank" class="btn-wa">💬 WhatsApp</a>
-                    </div>
-                </div>
-                <div class="detalle-bloque">
-                    <p class="detalle-titulo">Entrega</p>
-                    <div class="detalle-row"><strong>Dirección</strong><span>${p.domicilio?.direccion || "—"}</span></div>
-                    <div class="detalle-row"><strong>Ciudad</strong><span>${p.domicilio?.ciudad || "—"}</span></div>
-                    <div class="detalle-row"><strong>Indicaciones</strong><span>${p.domicilio?.indicaciones || "Ninguna"}</span></div>
-                    <div class="detalle-row"><strong>Pago</strong><span>${p.domicilio?.metodoPago || "—"}</span></div>
-                    <div class="detalle-row"><strong>Fecha</strong><span>${fecha}</span></div>
-                </div>
-                <div class="detalle-bloque">
-                    <p class="detalle-titulo">Productos</p>
-                    ${prodsHtml}
-                    <div class="prod-total">
-                        <span>Total</span>
-                        <span>$ ${Number(p.total || 0).toLocaleString("es-CO")}</span>
-                    </div>
-                </div>
-                <div class="detalle-bloque">
-                    <p class="detalle-titulo">Estado del pedido</p>
-                    <div class="estado-btns">
-                        <button class="btn-estado ${estado==='pendiente'?'activo':''}"  data-nuevo="pendiente">Pendiente</button>
-                        <button class="btn-estado ${estado==='en camino'?'activo':''}"  data-nuevo="en camino">En camino</button>
-                        <button class="btn-estado ${estado==='entregado'?'activo':''}"  data-nuevo="entregado">Entregado</button>
-                        <button class="btn-estado btn-cancelar ${estado==='cancelado'?'activo':''}" data-nuevo="cancelado">Cancelado</button>
-                    </div>
-                    <button class="btn-eliminar-pedido" data-id="${id}">🗑 Eliminar pedido</button>
-                </div>
-            `;
-
-            document.querySelectorAll(".btn-estado").forEach(btn => {
-                btn.addEventListener("click", () => cambiarEstado(id, btn.dataset.nuevo));
-            });
-
-            document.querySelector(".btn-eliminar-pedido").addEventListener("click", () => {
-                eliminarPedido(id);
-            });
-
-            document.getElementById("modal-overlay").classList.remove("hidden");
-            document.getElementById("modal-pedido").classList.remove("hidden");
-        }
-
-        async function cambiarEstado(id, nuevoEstado) {
-            try {
-                await updateDoc(doc(db, "pedidos", id), { estado: nuevoEstado });
-                const p = todosPedidos.find(x => x.id === id);
-                if (p) p.estado = nuevoEstado;
-                actualizarStats();
-                cerrarModales();
-                const lista = filtroActual === "todos"
-                    ? todosPedidos
-                    : todosPedidos.filter(p => p.estado === filtroActual);
-                renderPedidos(lista);
-            } catch (err) { alert("Error al cambiar estado: " + err.message); }
-        }
-
-        async function eliminarPedido(id) {
-            if (!confirm("¿Eliminar este pedido permanentemente? Esta acción no se puede deshacer.")) return;
-            try {
-                await deleteDoc(doc(db, "pedidos", id));
-                todosPedidos = todosPedidos.filter(p => p.id !== id);
-                actualizarStats();
-                cerrarModales();
-                const lista = filtroActual === "todos"
-                    ? todosPedidos
-                    : todosPedidos.filter(p => p.estado === filtroActual);
-                renderPedidos(lista);
-            } catch (err) { alert("Error al eliminar: " + err.message); }
-        }
-
-        // ══════════════════════════════════════
-        //  PRODUCTOS
-        // ══════════════════════════════════════
-        let todosProductos = [];
-
-        async function cargarProductos() {
-            try {
-                const snap = await getDocs(query(collection(db, "productos"), orderBy("nombre")));
-                todosProductos = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-                renderProductos(todosProductos);
-            } catch (err) {
-                // Si no hay índice de ordenación, carga sin orden
-                try {
-                    const snap2 = await getDocs(collection(db, "productos"));
-                    todosProductos = snap2.docs.map(d => ({ id: d.id, ...d.data() }));
-                    renderProductos(todosProductos);
-                } catch (err2) {
-                    document.getElementById("productos-grid").innerHTML =
-                        `<p class="msg-centro" style="color:#c62828">Error al cargar productos: ${err2.message}</p>`;
-                }
-            }
-        }
-
-        function renderProductos(lista) {
-            const grid = document.getElementById("productos-grid");
-            if (!lista.length) {
-                grid.innerHTML = `<p class="msg-centro">No hay productos registrados.</p>`;
-                return;
-            }
-            grid.innerHTML = lista.map(p => {
-                const imgHtml = p.imagen
-                    ? `<img class="prod-img" src="${p.imagen}" alt="${p.nombre}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`
-                    : "";
-                const placeholder = `<div class="prod-img-placeholder" ${p.imagen ? 'style="display:none"' : ""}>🍫</div>`;
-                const dispHtml = p.disponible !== false
-                    ? `<span class="prod-disponible">● Disponible</span>`
-                    : `<span class="prod-no-disponible">● No disponible</span>`;
-                return `
-                <div class="producto-card">
-                    ${imgHtml}${placeholder}
-                    <div class="prod-info">
-                        <p class="prod-nombre">${p.nombre || "Sin nombre"}</p>
-                        <p class="prod-desc">${p.descripcion || ""}</p>
-                        <div class="prod-meta">
-                            <span class="prod-precio">$ ${Number(p.precio || 0).toLocaleString("es-CO")}</span>
-                            <span class="prod-categoria">${p.categoria || "—"}</span>
-                        </div>
-                        ${dispHtml}
-                    </div>
-                    <div class="prod-actions">
-                        <button class="btn-editar-prod" data-id="${p.id}">✏ Editar</button>
-                        <button class="btn-eliminar-prod" data-id="${p.id}">🗑 Eliminar</button>
-                    </div>
-                </div>`;
-            }).join("");
-
-            document.querySelectorAll(".btn-editar-prod").forEach(btn => {
-                btn.addEventListener("click", () => abrirFormProducto(btn.dataset.id));
-            });
-
-            document.querySelectorAll(".btn-eliminar-prod").forEach(btn => {
-                btn.addEventListener("click", () => eliminarProducto(btn.dataset.id));
-            });
-        }
-
-        async function eliminarProducto(id) {
-            const p = todosProductos.find(x => x.id === id);
-            if (!confirm(`¿Eliminar "${p?.nombre || "este producto"}"? Esta acción no se puede deshacer.`)) return;
-            try {
-                await deleteDoc(doc(db, "productos", id));
-                todosProductos = todosProductos.filter(x => x.id !== id);
-                renderProductos(todosProductos);
-            } catch (err) { alert("Error al eliminar: " + err.message); }
-        }
-
-        // Formulario producto
-        document.getElementById("btn-nuevo-producto").addEventListener("click", () => abrirFormProducto(null));
-
-        function abrirFormProducto(id) {
-            const p = id ? todosProductos.find(x => x.id === id) : null;
-
-            document.getElementById("modal-producto-titulo").textContent =
-                p ? "Editar Producto" : "Nuevo Producto";
-            document.getElementById("prod-id").value           = p?.id || "";
-            document.getElementById("prod-nombre").value       = p?.nombre || "";
-            document.getElementById("prod-descripcion").value  = p?.descripcion || "";
-            document.getElementById("prod-precio").value       = p?.precio || "";
-            document.getElementById("prod-categoria").value    = p?.categoria || "";
-            document.getElementById("prod-imagen").value       = p?.imagen || "";
-            document.getElementById("prod-disponible").checked = p?.disponible !== false;
-
-            document.getElementById("modal-overlay").classList.remove("hidden");
-            document.getElementById("modal-producto").classList.remove("hidden");
-        }
-
-        document.getElementById("form-producto").addEventListener("submit", async e => {
-            e.preventDefault();
-            const id          = document.getElementById("prod-id").value;
-            const nombre      = document.getElementById("prod-nombre").value.trim();
-            const descripcion = document.getElementById("prod-descripcion").value.trim();
-            const precio      = parseFloat(document.getElementById("prod-precio").value);
-            const categoria   = document.getElementById("prod-categoria").value;
-            const imagen      = document.getElementById("prod-imagen").value.trim();
-            const disponible  = document.getElementById("prod-disponible").checked;
-
-            if (!nombre || !descripcion || isNaN(precio) || !categoria) {
-                alert("Por favor completa todos los campos obligatorios.");
-                return;
-            }
-
-            const datos = { nombre, descripcion, precio, categoria, imagen, disponible };
-            const btnGuardar = document.getElementById("btn-guardar-prod");
-            btnGuardar.textContent = "Guardando...";
-            btnGuardar.disabled = true;
-
-            try {
-                if (id) {
-                    await updateDoc(doc(db, "productos", id), datos);
-                } else {
-                    await addDoc(collection(db, "productos"), datos);
-                }
-                cerrarModales();
-                await cargarProductos();
-            } catch (err) {
-                alert("Error al guardar: " + err.message);
-            } finally {
-                btnGuardar.textContent = "Guardar producto";
-                btnGuardar.disabled = false;
-            }
-        });
-
-        document.getElementById("btn-cancelar-prod").addEventListener("click", cerrarModales);
-
-        // ══════════════════════════════════════
-        //  CERRAR MODALES
-        // ══════════════════════════════════════
-        function cerrarModales() {
-            document.getElementById("modal-overlay").classList.add("hidden");
-            document.getElementById("modal-pedido").classList.add("hidden");
-            document.getElementById("modal-producto").classList.add("hidden");
-        }
-
-        document.getElementById("modal-pedido-close").addEventListener("click", cerrarModales);
-        document.getElementById("modal-producto-close").addEventListener("click", cerrarModales);
-        document.getElementById("modal-overlay").addEventListener("click", cerrarModales);
-    </script>
+    <!-- ══ SCRIPTS ═════════════════════════════════════════════ -->
+    <script type="module" src="/src/js/admin.js"></script>
 </body>
 </html>
-
