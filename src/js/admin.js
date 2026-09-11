@@ -119,7 +119,26 @@ async function cargarPedidos() {
 
         // Conectar buscador (una sola vez)
         const buscador = document.getElementById("buscador-pedidos");
+        const btnBuscar = document.getElementById("btn-buscar");
+        const btnLimpiar = document.getElementById("btn-limpiar-busqueda");
+
+        // Filtrar mientras escribe
         buscador.addEventListener("input", () => aplicarFiltrosYBusqueda());
+
+        // Filtrar al presionar Enter
+        buscador.addEventListener("keydown", e => {
+            if (e.key === "Enter") { e.preventDefault(); aplicarFiltrosYBusqueda(); }
+        });
+
+        // Botón 🔍 también ejecuta la búsqueda
+        btnBuscar.addEventListener("click", () => aplicarFiltrosYBusqueda());
+
+        // Botón limpiar
+        btnLimpiar.addEventListener("click", () => {
+            buscador.value = "";
+            aplicarFiltrosYBusqueda();
+            buscador.focus();
+        });
     } catch (err) {
         document.getElementById("pedidos-grid").innerHTML =
             `<p class="msg-centro" style="color:#c62828">Error al cargar pedidos: ${err.message}</p>`;
@@ -168,13 +187,16 @@ function aplicarFiltrosYBusqueda() {
         });
     }
 
-    // Mostrar contador de resultados cuando hay búsqueda activa
+    // Mostrar/ocultar botón limpiar y contador
     const contador = document.getElementById("buscador-resultados");
+    const btnLimpiar = document.getElementById("btn-limpiar-busqueda");
     if (texto) {
         contador.textContent = `${lista.length} resultado${lista.length !== 1 ? "s" : ""}`;
         contador.classList.remove("hidden");
+        btnLimpiar.classList.remove("hidden");
     } else {
         contador.classList.add("hidden");
+        btnLimpiar.classList.add("hidden");
     }
 
     renderPedidos(lista);
