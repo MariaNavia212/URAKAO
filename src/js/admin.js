@@ -13,7 +13,7 @@ import {
     query, orderBy
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-// ── Cloudinary config ─────────────────────────────────────────
+// ── Cloudinary ────────────────────────────────────────────────
 const CLOUDINARY_CLOUD  = "dkouwikge";
 const CLOUDINARY_PRESET = "ml_defauld";
 
@@ -66,46 +66,8 @@ function formatFecha(ts, estilo = "short") {
     });
 }
 
-// ════════════════════════════════════════════════════════════
-//  MODAL DE CONFIRMACIÓN
-// ════════════════════════════════════════════════════════════
-
-/**
- * Muestra un modal de confirmación personalizado.
- * @param {string} titulo  - Título del modal
- * @param {string} mensaje - Descripción de la acción
- * @returns {Promise<boolean>} true si el usuario confirma, false si cancela
- */
-function confirmar(titulo, mensaje) {
-    return new Promise(resolve => {
-        document.getElementById("confirm-titulo").textContent  = titulo;
-        document.getElementById("confirm-mensaje").textContent = mensaje;
-
-        const overlay = document.getElementById("modal-confirm-overlay");
-        const modal   = document.getElementById("modal-confirm");
-        overlay.classList.remove("hidden");
-        modal.classList.remove("hidden");
-
-        const btnOk     = document.getElementById("confirm-btn-ok");
-        const btnCancel = document.getElementById("confirm-btn-cancelar");
-
-        function cerrar(resultado) {
-            overlay.classList.add("hidden");
-            modal.classList.add("hidden");
-            btnOk.removeEventListener("click", onOk);
-            btnCancel.removeEventListener("click", onCancel);
-            resolve(resultado);
-        }
-
-        const onOk     = () => cerrar(true);
-        const onCancel = () => cerrar(false);
-
-        btnOk.addEventListener("click",     onOk);
-        btnCancel.addEventListener("click", onCancel);
-    });
-}
-
-
+/** Cierra todos los modales */
+function cerrarModales() {
     document.getElementById("modal-overlay").classList.add("hidden");
     document.getElementById("modal-pedido").classList.add("hidden");
     document.getElementById("modal-producto").classList.add("hidden");
@@ -318,11 +280,7 @@ async function cambiarEstado(id, nuevoEstado) {
 async function eliminarPedido(id) {
     const p = todosPedidos.find(x => x.id === id);
     const nombre = p?.domicilio?.nombre || p?.usuarioEmail || "este pedido";
-    const ok = await confirmar(
-        "Eliminar pedido",
-        `¿Segura que quieres eliminar el pedido de "${nombre}"? Esta acción no se puede deshacer.`
-    );
-    if (!ok) return;
+    if (!confirm(`¿Eliminar el pedido de "${nombre}"?\nEsta acción no se puede deshacer.`)) return;
     try {
         await deleteDoc(doc(db, "pedidos", id));
         todosPedidos = todosPedidos.filter(x => x.id !== id);
@@ -407,11 +365,7 @@ function renderProductos(lista) {
 
 async function eliminarProducto(id) {
     const p = todosProductos.find(x => x.id === id);
-    const ok = await confirmar(
-        "Eliminar producto",
-        `¿Segura que quieres eliminar "${p?.nombre || "este producto"}"? Esta acción no se puede deshacer.`
-    );
-    if (!ok) return;
+    if (!confirm(`¿Eliminar "${p?.nombre || "este producto"}"?\nEsta acción no se puede deshacer.`)) return;
     try {
         await deleteDoc(doc(db, "productos", id));
         todosProductos = todosProductos.filter(x => x.id !== id);
@@ -440,13 +394,13 @@ function abrirFormProducto(id) {
     document.getElementById("prod-imagen-url").value   = p?.imagen      || "";
     document.getElementById("prod-disponible").checked = p?.disponible !== false;
 
-    // Resetear área de upload siempre al abrir
+    // Resetear área de upload
     resetUploadArea();
-    document.getElementById("prod-imagen-url").value = p?.imagen || "";
-    fileInput.value = "";
 
-    // Si el producto ya tiene imagen, mostrar preview
-    if (p?.imagen) mostrarPreview(p.imagen);
+    // Si hay imagen existente, mostrar preview
+    if (p?.imagen) {
+        mostrarPreview(p.imagen);
+    }
 
     document.getElementById("modal-overlay").classList.remove("hidden");
     document.getElementById("modal-producto").classList.remove("hidden");
@@ -511,23 +465,23 @@ async function subirImagen(file) {
     formData.append("upload_preset", CLOUDINARY_PRESET);
     formData.append("folder",        "urakao/productos");
 
-    // Mostrar barra de progreso indeterminada mientras sube
     document.getElementById("upload-preview").classList.add("hidden");
     document.getElementById("upload-progress").classList.remove("hidden");
-    document.getElementById("progress-fill").style.width = "60%";
+    document.getElementById("progress-fill").style.width = "50%";
     document.getElementById("progress-text").textContent = "Subiendo imagen...";
 
-    const url = `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD}/image/upload`;
-
-    const res = await fetch(url, { method: "POST", body: formData });
+    const res = await fetch(
+        `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD}/image/upload`,
+        { method: "POST", body: formData }
+    );
 
     if (!res.ok) {
         const err = await res.json().catch(() => ({}));
-        throw new Error(err?.error?.message || `Cloudinary error ${res.status}`);
+        throw new Error(err?.error?.message || `Error ${res.status}`);
     }
 
     document.getElementById("progress-fill").style.width = "100%";
-    document.getElementById("progress-text").textContent = "¡Imagen subida!";
+    document.getElementById("progress-text").textContent = "¡Listo!";
 
     const data = await res.json();
     return data.secure_url;

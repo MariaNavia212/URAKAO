@@ -7,7 +7,6 @@
       "**/node_modules/**",
       "firestore.rules",
       "firestore.indexes.json",
-      "storage.rules",
       "*.xlsx",
       "~$*",
       "Fotos Camara Sesion/**",
