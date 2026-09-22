@@ -248,3 +248,33 @@
 @media (max-width: 480px) {
     .carrito-panel { width: 100vw; }
 }
+
+/* ── Botón WhatsApp por producto ─────────────────────────────── */
+.btn-wa-producto {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    margin-top: 0.7rem;
+    padding: 0.55rem 0;
+    background: none;
+    border: 1px solid #25D366;
+    color: #25D366;
+    font-family: 'Georgia', serif;
+    font-size: 0.78rem;
+    letter-spacing: 0.5px;
+    text-decoration: none;
+    border-radius: 2px;
+    transition: background 0.25s, color 0.25s;
+    width: 100%;
+}
+
+.btn-wa-producto:hover {
+    background: #25D366;
+    color: white;
+}
+
+.btn-wa-producto svg {
+    flex-shrink: 0;
+    transition: fill 0.25s;
+}
