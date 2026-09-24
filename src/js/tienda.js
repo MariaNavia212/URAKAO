@@ -163,12 +163,8 @@ function crearTarjeta(producto) {
         </div>
     `;
 
-    // RF2: Abrir modal de personalización — requiere login
+    // RF2: Abrir modal de personalización — libre, login solo al pedir
     card.querySelector(".btn-agregar").addEventListener("click", () => {
-        if (!usuarioActual) {
-            window.location.href = "/login";
-            return;
-        }
         abrirModalPersonalizacion(producto, imgUrl);
     });
 
@@ -346,25 +342,23 @@ window.eliminarDelCarrito = function (persId) {
 };
 
 window.abrirCarrito = function () {
-    if (!usuarioActual) {
-        window.location.href = "/login";
-        return;
-    }
     document.getElementById("carrito-panel").classList.remove("hidden");
     document.getElementById("carrito-overlay").classList.remove("hidden");
 };
 
 window.toggleCarrito = function () {
-    if (!usuarioActual) {
-        window.location.href = "/login";
-        return;
-    }
     document.getElementById("carrito-panel").classList.toggle("hidden");
     document.getElementById("carrito-overlay").classList.toggle("hidden");
 };
 
 window.irACheckout = function () {
     if (carrito.length === 0) return;
+    if (!usuarioActual) {
+        // Guardar carrito antes de redirigir para no perderlo
+        guardarCarrito();
+        window.location.href = "/login";
+        return;
+    }
     window.location.href = "/checkout";
 };
 

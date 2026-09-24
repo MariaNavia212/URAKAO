@@ -304,3 +304,26 @@
 .btn-wa-producto svg {
     flex-shrink: 0;
 }
+
+/* ── Banner informativo pedido ───────────────────────────────── */
+.banner-info-pedido {
+    margin-bottom: 2rem;
+    padding: 0.9rem 1.2rem;
+    background: #FFF8F0;
+    border-left: 3px solid var(--ocre);
+    font-size: 0.82rem;
+    color: var(--cafe-medio);
+    line-height: 1.6;
+}
+
+/* ── Aviso en carrito ────────────────────────────────────────── */
+.aviso-pedido {
+    font-size: 0.76rem;
+    color: var(--cafe-medio);
+    background: #FFF8F0;
+    border: 1px solid var(--beige);
+    border-left: 3px solid var(--ocre);
+    padding: 0.7rem 0.9rem;
+    margin-bottom: 1rem;
+    line-height: 1.6;
+}
