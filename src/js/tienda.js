@@ -39,14 +39,24 @@ const ADICIONES = [
     { id: "chile",      nombre: "Chile suave",        precio: 1000 }
 ];
 
-// ── Auth guard ────────────────────────────────────────────────
+// ── Auth — solo identifica si hay sesión, no bloquea ─────────
+let usuarioActual = null;
+
 onAuthStateChanged(auth, (user) => {
-    if (!user) {
-        window.location.href = "/login";
-        return;
-    }
+    usuarioActual = user;
     const greeting = document.getElementById("user-name");
-    if (greeting) greeting.textContent = `Hola, ${user.displayName || user.email}`;
+    const btnLogout = document.getElementById("btn-logout");
+    const btnLogin  = document.getElementById("btn-login");
+
+    if (user) {
+        if (greeting) greeting.textContent = `Hola, ${user.displayName?.split(" ")[0] || ""}`;
+        if (btnLogout) btnLogout.classList.remove("hidden");
+        if (btnLogin)  btnLogin.classList.add("hidden");
+    } else {
+        if (greeting) greeting.textContent = "";
+        if (btnLogout) btnLogout.classList.add("hidden");
+        if (btnLogin)  btnLogin.classList.remove("hidden");
+    }
     cargarProductos();
 });
 
@@ -77,20 +87,45 @@ async function cargarProductos() {
             return;
         }
 
-        grid.innerHTML = "";
         productosCache = [];
         snap.forEach((docSnap) => {
             const p = { id: docSnap.id, ...docSnap.data() };
-            productosCache.push(p);
-            grid.appendChild(crearTarjeta(p));
+            if (p.disponible !== false) productosCache.push(p);
         });
 
+        renderProductos(productosCache);
         actualizarContadorCarrito();
     } catch (err) {
         console.error("Error cargando productos:", err);
         grid.innerHTML = `<p class='sin-productos'>Error al cargar productos: ${err.message}</p>`;
     }
 }
+
+function renderProductos(lista) {
+    const grid = document.getElementById("productos-grid");
+    grid.innerHTML = "";
+    if (!lista.length) {
+        grid.innerHTML = "<p class='sin-productos'>No se encontraron productos.</p>";
+        return;
+    }
+    lista.forEach(p => grid.appendChild(crearTarjeta(p)));
+}
+
+// ── Buscador ──────────────────────────────────────────────────
+document.getElementById("buscador-tienda").addEventListener("input", function () {
+    const texto = this.value.trim().toLowerCase();
+    if (!texto) {
+        renderProductos(productosCache);
+        return;
+    }
+    const filtrados = productosCache.filter(p =>
+        (p.nombre        || "").toLowerCase().includes(texto) ||
+        (p.descripcion   || "").toLowerCase().includes(texto) ||
+        (p.categoria     || "").toLowerCase().includes(texto) ||
+        (p.origen        || "").toLowerCase().includes(texto)
+    );
+    renderProductos(filtrados);
+});
 
 // ── RF1: Tarjeta con especificaciones técnicas ────────────────
 function crearTarjeta(producto) {
@@ -128,8 +163,12 @@ function crearTarjeta(producto) {
         </div>
     `;
 
-    // RF2: Abrir modal de personalización al hacer clic
+    // RF2: Abrir modal de personalización — requiere login
     card.querySelector(".btn-agregar").addEventListener("click", () => {
+        if (!usuarioActual) {
+            window.location.href = "/login";
+            return;
+        }
         abrirModalPersonalizacion(producto, imgUrl);
     });
 
@@ -306,7 +345,20 @@ window.eliminarDelCarrito = function (persId) {
     renderCarrito();
 };
 
+window.abrirCarrito = function () {
+    if (!usuarioActual) {
+        window.location.href = "/login";
+        return;
+    }
+    document.getElementById("carrito-panel").classList.remove("hidden");
+    document.getElementById("carrito-overlay").classList.remove("hidden");
+};
+
 window.toggleCarrito = function () {
+    if (!usuarioActual) {
+        window.location.href = "/login";
+        return;
+    }
     document.getElementById("carrito-panel").classList.toggle("hidden");
     document.getElementById("carrito-overlay").classList.toggle("hidden");
 };

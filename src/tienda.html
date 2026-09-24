@@ -733,10 +733,11 @@
             </ul>
             <div class="nav-actions">
                 <span id="user-name" class="user-greeting"></span>
-                <button id="btn-carrito" class="btn-carrito" onclick="toggleCarrito()">
+                <button id="btn-carrito" class="btn-carrito" onclick="abrirCarrito()">
                     🛒 <span id="carrito-count">0</span>
                 </button>
-                <button id="btn-logout" class="btn-nav" onclick="cerrarSesion()">Salir</button>
+                <a href="/login" id="btn-login" class="btn-nav">Iniciar sesión</a>
+                <button id="btn-logout" class="btn-nav hidden" onclick="cerrarSesion()">Salir</button>
             </div>
         </div>
     </nav>
@@ -746,6 +747,15 @@
             <div class="tienda-header">
                 <p class="section-label">Catálogo</p>
                 <h1>Nuestros Productos</h1>
+                <div class="buscador-tienda-wrap">
+                    <input
+                        type="text"
+                        id="buscador-tienda"
+                        class="buscador-tienda-input"
+                        placeholder="Buscar por nombre, categoría o característica..."
+                        autocomplete="off"
+                    >
+                </div>
             </div>
 
             <!-- Grid de productos -->

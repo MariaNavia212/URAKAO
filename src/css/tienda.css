@@ -249,7 +249,33 @@
     .carrito-panel { width: 100vw; }
 }
 
-/* ── Botón WhatsApp por producto ─────────────────────────────── */
+/* ── Buscador tienda ─────────────────────────────────────────── */
+.buscador-tienda-wrap {
+    margin-top: 1.5rem;
+    max-width: 520px;
+}
+
+.buscador-tienda-input {
+    width: 100%;
+    padding: 0.85rem 1.2rem;
+    border: 1px solid var(--beige);
+    border-bottom: 2px solid var(--cafe-oscuro);
+    background: white;
+    font-family: 'Georgia', serif;
+    font-size: 0.9rem;
+    color: var(--cafe-oscuro);
+    outline: none;
+    transition: border-color 0.2s;
+}
+
+.buscador-tienda-input:focus {
+    border-bottom-color: var(--ocre);
+}
+
+.buscador-tienda-input::placeholder {
+    color: var(--beige);
+    font-style: italic;
+}
 .btn-wa-producto {
     display: flex;
     align-items: center;
