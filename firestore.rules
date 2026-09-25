@@ -2,9 +2,10 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Productos: cualquiera puede leer y escribir (modo desarrollo)
+    // Productos: cualquiera puede leer, solo autenticados escriben
     match /productos/{productoId} {
-      allow read, write: if true;
+      allow read: if true;
+      allow write: if request.auth != null;
     }
 
     // Usuarios: cualquier usuario autenticado puede leer/escribir su perfil
@@ -15,6 +16,12 @@ service cloud.firestore {
     // Pedidos: cualquier usuario autenticado puede crear y leer
     match /pedidos/{pedidoId} {
       allow read, write: if request.auth != null;
+    }
+
+    // Reseñas: cualquiera puede leer, solo autenticados escriben
+    match /resenas/{resenaId} {
+      allow read: if true;
+      allow write: if request.auth != null;
     }
   }
 }
