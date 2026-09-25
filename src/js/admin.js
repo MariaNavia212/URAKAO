@@ -491,7 +491,14 @@ document.getElementById("form-resena").addEventListener("submit", async e => {
     const nombre     = document.getElementById("resena-nombre").value.trim();
     const comentario = document.getElementById("resena-comentario").value.trim();
     const estrellas  = parseInt(document.getElementById("resena-estrellas").value);
-    const foto       = document.getElementById("resena-foto").value.trim();
+    const fotoRaw    = document.getElementById("resena-foto").value.trim();
+
+    // Convertir link de Google Drive a URL directa de imagen
+    let foto = fotoRaw;
+    const driveMatch = fotoRaw.match(/\/d\/([a-zA-Z0-9_-]+)/);
+    if (driveMatch) {
+        foto = `https://lh3.googleusercontent.com/d/${driveMatch[1]}`;
+    }
 
     if (!nombre || !comentario) {
         toast("Nombre y comentario son obligatorios", "error"); return;
