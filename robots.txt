@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /checkout
+Disallow: /login
+Disallow: /seed
+
+Sitemap: https://urakao.web.app/sitemap.xml
