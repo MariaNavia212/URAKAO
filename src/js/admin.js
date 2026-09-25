@@ -54,7 +54,7 @@ function formatFecha(ts, estilo = "short") {
 }
 
 function cerrarModales() {
-    ["modal-overlay", "modal-pedido", "modal-producto", "modal-confirm-overlay", "modal-confirm"]
+    ["modal-overlay", "modal-pedido", "modal-producto", "modal-confirm-overlay", "modal-confirm", "modal-resena"]
         .forEach(id => document.getElementById(id)?.classList.add("hidden"));
 }
 
@@ -92,6 +92,7 @@ onAuthStateChanged(auth, user => {
     document.getElementById("admin-email").textContent = user.displayName || user.email;
     cargarPedidos();
     cargarProductos();
+    cargarResenas();
 });
 
 document.getElementById("btn-salir").addEventListener("click", async () => {
@@ -110,6 +111,7 @@ document.querySelectorAll(".tab-btn").forEach(btn => {
         const tab = btn.dataset.tab;
         document.getElementById("tab-pedidos").classList.toggle("hidden",   tab !== "pedidos");
         document.getElementById("tab-productos").classList.toggle("hidden", tab !== "productos");
+        document.getElementById("tab-resenas").classList.toggle("hidden",   tab !== "resenas");
     });
 });
 
@@ -404,10 +406,129 @@ document.getElementById("form-producto").addEventListener("submit", async e => {
 document.getElementById("btn-cancelar-prod").addEventListener("click", cerrarModales);
 
 // ════════════════════════════════════════════════════════════
+//  RESEÑAS
+// ════════════════════════════════════════════════════════════
+
+let todasResenas = [];
+
+async function cargarResenas() {
+    try {
+        const snap = await getDocs(collection(db, "resenas"));
+        todasResenas = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        renderResenas(todasResenas);
+    } catch (err) {
+        document.getElementById("resenas-grid-admin").innerHTML =
+            `<p class="msg-centro" style="color:#c62828">Error: ${err.message}</p>`;
+    }
+}
+
+function renderResenas(lista) {
+    const grid = document.getElementById("resenas-grid-admin");
+    if (!lista.length) {
+        grid.innerHTML = `<p class="msg-centro">No hay reseñas. Agrega la primera.</p>`;
+        return;
+    }
+    grid.innerHTML = lista.map(r => {
+        const estrellas = "★".repeat(r.estrellas || 5) + "☆".repeat(5 - (r.estrellas || 5));
+        const fotoHtml = r.foto
+            ? `<img src="${r.foto}" alt="${r.nombre}" style="width:56px;height:56px;border-radius:50%;object-fit:cover;flex-shrink:0">`
+            : `<div style="width:56px;height:56px;border-radius:50%;background:var(--crema);display:flex;align-items:center;justify-content:center;font-size:1.4rem;flex-shrink:0">🍫</div>`;
+        return `
+        <div class="producto-card" style="flex-direction:column">
+            <div class="prod-info" style="display:flex;flex-direction:column;gap:.5rem;padding:1.2rem">
+                <div style="display:flex;align-items:center;gap:.8rem">
+                    ${fotoHtml}
+                    <div>
+                        <p class="prod-nombre">${r.nombre || "Cliente"}</p>
+                        <p style="color:var(--verde);font-size:.85rem;letter-spacing:1px">${estrellas}</p>
+                    </div>
+                </div>
+                <p class="prod-desc" style="-webkit-line-clamp:3;font-style:italic">"${r.comentario || ""}"</p>
+            </div>
+            <div class="prod-actions">
+                <button class="btn-editar-prod"   data-id="${r.id}">✏ Editar</button>
+                <button class="btn-eliminar-prod" data-id="${r.id}">🗑 Eliminar</button>
+            </div>
+        </div>`;
+    }).join("");
+
+    grid.querySelectorAll(".btn-editar-prod").forEach(btn =>
+        btn.addEventListener("click", () => abrirFormResena(btn.dataset.id)));
+    grid.querySelectorAll(".btn-eliminar-prod").forEach(btn =>
+        btn.addEventListener("click", () => eliminarResena(btn.dataset.id)));
+}
+
+async function eliminarResena(id) {
+    const r  = todasResenas.find(x => x.id === id);
+    const ok = await confirmar("Eliminar reseña", `¿Eliminar la reseña de "${r?.nombre}"?`);
+    if (!ok) return;
+    try {
+        await deleteDoc(doc(db, "resenas", id));
+        todasResenas = todasResenas.filter(x => x.id !== id);
+        renderResenas(todasResenas);
+        toast("Reseña eliminada", "ok");
+    } catch (err) { toast("Error: " + err.message, "error"); }
+}
+
+document.getElementById("btn-nueva-resena")
+    .addEventListener("click", () => abrirFormResena(null));
+
+function abrirFormResena(id) {
+    const r = id ? todasResenas.find(x => x.id === id) : null;
+    document.getElementById("modal-resena-titulo").textContent = r ? "Editar Reseña" : "Nueva Reseña";
+    document.getElementById("resena-id").value         = r?.id         || "";
+    document.getElementById("resena-nombre").value     = r?.nombre     || "";
+    document.getElementById("resena-comentario").value = r?.comentario || "";
+    document.getElementById("resena-estrellas").value  = r?.estrellas  || "5";
+    document.getElementById("resena-foto").value       = r?.foto       || "";
+    document.getElementById("modal-overlay").classList.remove("hidden");
+    document.getElementById("modal-resena").classList.remove("hidden");
+}
+
+document.getElementById("form-resena").addEventListener("submit", async e => {
+    e.preventDefault();
+    const id         = document.getElementById("resena-id").value;
+    const nombre     = document.getElementById("resena-nombre").value.trim();
+    const comentario = document.getElementById("resena-comentario").value.trim();
+    const estrellas  = parseInt(document.getElementById("resena-estrellas").value);
+    const foto       = document.getElementById("resena-foto").value.trim();
+
+    if (!nombre || !comentario) {
+        toast("Nombre y comentario son obligatorios", "error"); return;
+    }
+
+    const btn = document.getElementById("btn-guardar-resena");
+    btn.textContent = "Guardando...";
+    btn.disabled    = true;
+
+    try {
+        const datos = { nombre, comentario, estrellas, foto,
+            creadoEn: id ? (todasResenas.find(x => x.id === id)?.creadoEn) : new Date() };
+        if (id) {
+            await updateDoc(doc(db, "resenas", id), datos);
+            toast(`Reseña de "${nombre}" actualizada`, "ok");
+        } else {
+            await addDoc(collection(db, "resenas"), datos);
+            toast(`Reseña de "${nombre}" creada`, "ok");
+        }
+        cerrarModales();
+        await cargarResenas();
+    } catch (err) {
+        toast("Error: " + err.message, "error");
+    } finally {
+        btn.textContent = "Guardar reseña";
+        btn.disabled    = false;
+    }
+});
+
+document.getElementById("btn-cancelar-resena").addEventListener("click", cerrarModales);
+
+// ════════════════════════════════════════════════════════════
 //  CERRAR MODALES
 // ════════════════════════════════════════════════════════════
 
 document.getElementById("modal-pedido-close").addEventListener("click",   cerrarModales);
 document.getElementById("modal-producto-close").addEventListener("click", cerrarModales);
+document.getElementById("modal-resena-close").addEventListener("click",   cerrarModales);
 document.getElementById("modal-overlay").addEventListener("click",        cerrarModales);
 document.addEventListener("keydown", e => { if (e.key === "Escape") cerrarModales(); });

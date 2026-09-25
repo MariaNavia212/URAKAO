@@ -25,6 +25,7 @@
     <div class="tabs-bar">
         <button class="tab-btn active" data-tab="pedidos">Pedidos</button>
         <button class="tab-btn" data-tab="productos">Productos</button>
+        <button class="tab-btn" data-tab="resenas">Reseñas</button>
     </div>
 
     <!-- ══ MAIN ════════════════════════════════════════════════ -->
@@ -78,9 +79,57 @@
             </div>
         </section>
 
+        <!-- ── Reseñas ── -->
+        <section id="tab-resenas" class="hidden">
+            <div class="seccion-header">
+                <h2>Reseñas</h2>
+                <button class="btn-nuevo" id="btn-nueva-resena">+ Nueva Reseña</button>
+            </div>
+            <div id="resenas-grid-admin" class="productos-grid">
+                <p class="msg-centro">Cargando reseñas...</p>
+            </div>
+        </section>
+
     </main>
 
-    <!-- ══ MODAL PEDIDO ════════════════════════════════════════ -->
+    <!-- ══ MODAL RESEÑA ════════════════════════════════════════ -->
+    <div id="modal-resena" class="modal hidden" role="dialog" aria-modal="true">
+        <div class="modal-head">
+            <h3 id="modal-resena-titulo">Nueva Reseña</h3>
+            <button class="modal-close" id="modal-resena-close" aria-label="Cerrar">✕</button>
+        </div>
+        <div class="modal-body">
+            <form id="form-resena" novalidate>
+                <input type="hidden" id="resena-id">
+                <div class="form-grupo">
+                    <label for="resena-nombre">Nombre del cliente</label>
+                    <input type="text" id="resena-nombre" required placeholder="Ej. María García">
+                </div>
+                <div class="form-grupo">
+                    <label for="resena-comentario">Comentario</label>
+                    <textarea id="resena-comentario" required placeholder="¿Qué dijo el cliente?" style="min-height:100px"></textarea>
+                </div>
+                <div class="form-grupo">
+                    <label for="resena-estrellas">Estrellas</label>
+                    <select id="resena-estrellas">
+                        <option value="5">★★★★★ — 5 estrellas</option>
+                        <option value="4">★★★★☆ — 4 estrellas</option>
+                        <option value="3">★★★☆☆ — 3 estrellas</option>
+                    </select>
+                </div>
+                <div class="form-grupo">
+                    <label for="resena-foto">URL de foto del cliente</label>
+                    <input type="text" id="resena-foto" placeholder="https://... (opcional)">
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn-cancelar-form" id="btn-cancelar-resena">Cancelar</button>
+                    <button type="submit" class="btn-guardar" id="btn-guardar-resena">Guardar reseña</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ══ MODAL OVERLAY ═══════════════════════════════════════ -->
     <div id="modal-overlay" class="modal-overlay hidden"></div>
 
     <div id="modal-pedido" class="modal hidden" role="dialog" aria-modal="true">
