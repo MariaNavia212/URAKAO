@@ -497,7 +497,7 @@ document.getElementById("form-resena").addEventListener("submit", async e => {
     let foto = fotoRaw;
     const driveMatch = fotoRaw.match(/\/d\/([a-zA-Z0-9_-]+)/);
     if (driveMatch) {
-        foto = `https://lh3.googleusercontent.com/d/${driveMatch[1]}`;
+        foto = `https://drive.google.com/thumbnail?id=${driveMatch[1]}&sz=w200`;
     }
 
     if (!nombre || !comentario) {
