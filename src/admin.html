@@ -26,6 +26,7 @@
         <button class="tab-btn active" data-tab="pedidos">Pedidos</button>
         <button class="tab-btn" data-tab="productos">Productos</button>
         <button class="tab-btn" data-tab="resenas">Reseñas</button>
+        <button class="tab-btn" data-tab="contabilidad">Contabilidad</button>
     </div>
 
     <!-- ══ MAIN ════════════════════════════════════════════════ -->
@@ -87,6 +88,182 @@
             </div>
             <div id="resenas-grid-admin" class="productos-grid">
                 <p class="msg-centro">Cargando reseñas...</p>
+            </div>
+        </section>
+
+        <!-- ── Financiero ── -->
+        <section id="tab-contabilidad" class="hidden">
+
+            <!-- Sub-navegación -->
+            <div class="fin-subnav">
+                <button class="fin-tab active" data-fin="costeo">Costeo de Productos</button>
+                <button class="fin-tab" data-fin="resumen">Resumen Financiero</button>
+            </div>
+
+            <!-- ══ Sub-tab: Costeo ══ -->
+            <div id="fin-costeo">
+
+                <div class="seccion-header">
+                    <h2>Costeo de Productos</h2>
+                    <select id="cont-selector-producto" class="cont-select">
+                        <option value="">Seleccionar producto...</option>
+                    </select>
+                </div>
+
+                <div id="cont-panel" class="hidden">
+
+                    <!-- A. Costos directos por lote -->
+                    <div class="cont-bloque">
+                        <h3 class="cont-bloque-titulo">A — Costos Directos de Producción (por lote)</h3>
+
+                        <div class="cont-fila-lote">
+                            <div class="form-grupo">
+                                <label for="cont-lote">Unidades por lote</label>
+                                <input type="number" id="cont-lote" min="1" value="1" placeholder="Ej. 50">
+                            </div>
+                        </div>
+
+                        <div class="lista-header">
+                            <span>Insumo / Materia prima</span>
+                            <span>Cantidad usada</span>
+                            <span>Costo del insumo en el lote ($)</span>
+                            <span></span>
+                        </div>
+                        <div id="insumos-lista"></div>
+                        <button type="button" class="btn-add-fila" id="btn-add-insumo">+ Agregar insumo</button>
+
+                        <div class="cont-resultado-fila">
+                            <span class="cont-lbl">Costo Directo Unitario <em>(CDU = Total insumos ÷ Lote)</em></span>
+                            <span class="cont-val" id="res-cdu">$ 0</span>
+                        </div>
+                    </div>
+
+                    <!-- B. Costos indirectos por unidad (lista dinámica) -->
+                    <div class="cont-bloque">
+                        <h3 class="cont-bloque-titulo">B — Costos Indirectos por Unidad</h3>
+                        <p class="cont-subtitulo">Agrega libremente cada costo que aplica por unidad: empaque, etiqueta, arriendo prorrateado, servicios, branding, etc.</p>
+
+                        <div class="lista-header lista-header-2">
+                            <span>Concepto del costo</span>
+                            <span>Costo por unidad ($)</span>
+                            <span></span>
+                        </div>
+                        <div id="indirectos-lista"></div>
+                        <button type="button" class="btn-add-fila" id="btn-add-indirecto">+ Agregar costo indirecto</button>
+
+                        <div class="cont-resultado-fila">
+                            <span class="cont-lbl">Costo Indirecto Unitario <em>(CIU = Suma de indirectos)</em></span>
+                            <span class="cont-val" id="res-ciu">$ 0</span>
+                        </div>
+                    </div>
+
+                    <!-- C. Totales y precio -->
+                    <div class="cont-bloque cont-bloque-totales">
+                        <h3 class="cont-bloque-titulo">C — Resumen y Precio de Venta</h3>
+
+                        <div class="cont-resultado-fila cont-resultado-grande">
+                            <span class="cont-lbl">Costo Total Unitario <em>(CTU = CDU + CIU)</em></span>
+                            <span class="cont-val cont-val-grande" id="res-ctu">$ 0</span>
+                        </div>
+
+                        <div class="cont-separador"></div>
+
+                        <div class="cont-precio-wrap">
+                            <div class="form-grupo">
+                                <label for="cont-precio-venta">Precio de venta deseado ($)</label>
+                                <input type="number" id="cont-precio-venta" min="0" placeholder="Ej. 35000">
+                            </div>
+                            <div class="cont-metricas">
+                                <div class="metrica-card">
+                                    <span class="metrica-val" id="res-ganancia">$ 0</span>
+                                    <span class="metrica-lbl">Ganancia neta / unidad</span>
+                                </div>
+                                <div class="metrica-card">
+                                    <span class="metrica-val" id="res-margen">0%</span>
+                                    <span class="metrica-lbl">Margen de ganancia</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <button type="button" class="btn-guardar-costeo" id="btn-guardar-costeo">
+                            Guardar costeo y actualizar precio en tienda →
+                        </button>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- ══ Sub-tab: Resumen Financiero ══ -->
+            <div id="fin-resumen" class="hidden">
+
+                <!-- KPIs -->
+                <div class="kpi-grid">
+                    <div class="kpi-card">
+                        <span class="kpi-num" id="kpi-ingresos">—</span>
+                        <span class="kpi-lbl">Ventas totales</span>
+                    </div>
+                    <div class="kpi-card">
+                        <span class="kpi-num" id="kpi-costos">—</span>
+                        <span class="kpi-lbl">Costos operativos</span>
+                    </div>
+                    <div class="kpi-card kpi-ganancia">
+                        <span class="kpi-num" id="kpi-ganancia">—</span>
+                        <span class="kpi-lbl">Ganancia neta</span>
+                    </div>
+                    <div class="kpi-card">
+                        <span class="kpi-num" id="kpi-margen">—</span>
+                        <span class="kpi-lbl">Margen promedio</span>
+                    </div>
+                </div>
+
+                <!-- Registrar venta externa -->
+                <div class="cont-bloque">
+                    <div class="seccion-header" style="margin-bottom:1rem">
+                        <h3 class="cont-bloque-titulo" style="margin:0">Registrar Venta Externa</h3>
+                        <button class="btn-nuevo" id="btn-toggle-venta-ext">+ Nueva venta</button>
+                    </div>
+                    <div id="form-venta-ext-wrap" class="hidden">
+                        <div class="venta-ext-form">
+                            <div class="form-grupo">
+                                <label for="vext-concepto">Concepto / producto</label>
+                                <input type="text" id="vext-concepto" placeholder="Ej. Venta en feria, punto físico...">
+                            </div>
+                            <div class="form-grupo">
+                                <label for="vext-monto">Monto ($)</label>
+                                <input type="number" id="vext-monto" min="0" placeholder="$ 0">
+                            </div>
+                            <div class="form-grupo">
+                                <label for="vext-fecha">Fecha</label>
+                                <input type="date" id="vext-fecha">
+                            </div>
+                            <div class="form-grupo">
+                                <label for="vext-nota">Nota (opcional)</label>
+                                <input type="text" id="vext-nota" placeholder="Detalle adicional...">
+                            </div>
+                        </div>
+                        <div class="form-actions">
+                            <button type="button" class="btn-cancelar-form" id="btn-cancelar-venta">Cancelar</button>
+                            <button type="button" class="btn-guardar" id="btn-guardar-venta">Guardar venta</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Gráficas -->
+                <div class="graficas-grid">
+                    <div class="grafica-card grafica-lineas">
+                        <p class="grafica-titulo">Ingresos vs Costos vs Ganancia</p>
+                        <canvas id="chart-lineas" height="200"></canvas>
+                    </div>
+                    <div class="grafica-card grafica-torta">
+                        <p class="grafica-titulo">Desglose de costos</p>
+                        <canvas id="chart-torta" height="200"></canvas>
+                    </div>
+                </div>
+                <div class="grafica-card" style="margin-top:1.2rem">
+                    <p class="grafica-titulo">Costo unitario vs Precio de venta por producto</p>
+                    <canvas id="chart-barras" height="120"></canvas>
+                </div>
+
             </div>
         </section>
 
@@ -209,6 +386,8 @@
     <div id="toast-container" class="toast-container" aria-live="polite"></div>
 
     <!-- ══ SCRIPT ══════════════════════════════════════════════ -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <script type="module" src="/src/js/admin.js"></script>
+    <script type="module" src="/src/js/contabilidad.js"></script>
 </body>
 </html>

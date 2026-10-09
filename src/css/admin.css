@@ -845,3 +845,347 @@ body {
     .tab-btn        { padding: 0.75rem 1.2rem; font-size: 0.76rem; }
     .admin-main     { padding: 120px 1rem 3rem; }
 }
+
+/* ════════════════════════════════════════════════════════════
+   MÓDULO FINANCIERO
+   ════════════════════════════════════════════════════════════ */
+
+/* ── Sub-navegación ─────────────────────────────────────────── */
+.fin-subnav {
+    display: flex;
+    gap: 0;
+    margin-bottom: 2rem;
+    border-bottom: 2px solid var(--crema2);
+}
+
+.fin-tab {
+    padding: 0.75rem 2rem;
+    background: none;
+    border: none;
+    border-bottom: 3px solid transparent;
+    margin-bottom: -2px;
+    font-family: Georgia, serif;
+    font-size: 0.9rem;
+    letter-spacing: 1px;
+    color: var(--cafe2);
+    cursor: pointer;
+    transition: color 0.2s, border-color 0.2s;
+}
+
+.fin-tab:hover { color: var(--cafe); }
+.fin-tab.active { color: var(--cafe); border-bottom-color: var(--cafe); font-weight: 600; }
+
+/* ── Bloques de costeo ───────────────────────────────────────── */
+.cont-bloque {
+    background: var(--blanco);
+    border: 1px solid var(--crema);
+    border-left: 4px solid var(--rojo);
+    padding: 1.6rem 1.8rem;
+    margin-bottom: 1.4rem;
+    box-shadow: 0 2px 8px rgba(67,40,24,0.05);
+}
+
+.cont-bloque-titulo {
+    font-family: Georgia, serif;
+    font-size: 1rem;
+    color: var(--cafe);
+    letter-spacing: 1px;
+    margin-bottom: 1.2rem;
+}
+
+.cont-subtitulo {
+    font-size: 0.78rem;
+    color: var(--cafe2);
+    font-style: italic;
+    margin-bottom: 1rem;
+    margin-top: -0.6rem;
+}
+
+.cont-fila-lote { margin-bottom: 1.2rem; }
+.cont-fila-lote .form-grupo { max-width: 200px; }
+
+/* ── Cabecera de listas ──────────────────────────────────────── */
+.lista-header {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1.5fr 36px;
+    gap: 0.6rem;
+    padding: 0.4rem 0.6rem;
+    background: var(--marfil);
+    border-radius: 4px;
+    margin-bottom: 0.5rem;
+    font-size: 0.68rem;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--cafe2);
+    font-weight: 600;
+}
+
+.lista-header-2 {
+    grid-template-columns: 2fr 1.5fr 36px;
+}
+
+/* ── Filas dinámicas ─────────────────────────────────────────── */
+.lista-fila {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1.5fr 36px;
+    gap: 0.6rem;
+    align-items: center;
+    margin-bottom: 0.5rem;
+}
+
+.lista-fila-2 {
+    grid-template-columns: 2fr 1.5fr 36px;
+}
+
+.lista-fila input {
+    width: 100%;
+    padding: 0.5rem 0.7rem;
+    border: 1px solid var(--crema2);
+    background: var(--marfil);
+    font-family: inherit;
+    font-size: 0.86rem;
+    color: var(--cafe);
+    outline: none;
+    border-radius: 4px;
+    transition: border-color 0.2s;
+}
+
+.lista-fila input:focus { border-color: var(--rojo); }
+
+.btn-remove {
+    background: none;
+    border: 1px solid var(--crema2);
+    color: #C62828;
+    width: 32px;
+    height: 32px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.75rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s;
+    flex-shrink: 0;
+}
+
+.btn-remove:hover { background: #FFEBEE; }
+
+.btn-add-fila {
+    background: none;
+    border: 1px dashed var(--crema2);
+    color: var(--cafe2);
+    padding: 0.5rem 1rem;
+    font-family: inherit;
+    font-size: 0.8rem;
+    cursor: pointer;
+    border-radius: 4px;
+    width: 100%;
+    margin-top: 0.3rem;
+    margin-bottom: 1.2rem;
+    transition: border-color 0.2s, color 0.2s, background 0.2s;
+}
+
+.btn-add-fila:hover { border-color: var(--cafe); color: var(--cafe); background: var(--marfil); }
+
+/* ── Filas de resultado ──────────────────────────────────────── */
+.cont-resultado-fila {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.7rem 0;
+    border-top: 1px solid var(--crema);
+}
+
+.cont-resultado-grande {
+    padding: 1rem 0;
+}
+
+.cont-lbl {
+    font-size: 0.84rem;
+    color: var(--cafe2);
+}
+
+.cont-lbl em {
+    font-size: 0.72rem;
+    color: var(--crema2);
+    font-style: italic;
+    margin-left: 0.4rem;
+}
+
+.cont-val {
+    font-family: Georgia, serif;
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--cafe);
+}
+
+.cont-val-grande {
+    font-size: 1.5rem;
+    color: var(--rojo);
+}
+
+.cont-separador {
+    height: 1px;
+    background: var(--crema2);
+    margin: 1rem 0;
+}
+
+/* ── Precio y métricas ───────────────────────────────────────── */
+.cont-precio-wrap {
+    display: flex;
+    gap: 2rem;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    margin: 1rem 0;
+}
+
+.cont-precio-wrap .form-grupo { min-width: 200px; }
+
+.cont-metricas {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.metrica-card {
+    background: var(--marfil);
+    border: 1px solid var(--crema);
+    padding: 0.8rem 1.2rem;
+    border-radius: 4px;
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+    min-width: 140px;
+}
+
+.metrica-val {
+    font-family: Georgia, serif;
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: var(--cafe);
+}
+
+.metrica-lbl {
+    font-size: 0.68rem;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--cafe2);
+}
+
+/* ── Botón guardar costeo ────────────────────────────────────── */
+.btn-guardar-costeo {
+    width: 100%;
+    padding: 0.85rem;
+    background: var(--cafe);
+    color: white;
+    border: none;
+    font-family: Georgia, serif;
+    font-size: 0.9rem;
+    letter-spacing: 1px;
+    cursor: pointer;
+    border-radius: 4px;
+    margin-top: 1rem;
+    transition: background 0.2s;
+}
+
+.btn-guardar-costeo:hover:not(:disabled) { background: var(--cafe2); }
+.btn-guardar-costeo:disabled { opacity: 0.65; cursor: not-allowed; }
+
+/* ── Selector de producto ────────────────────────────────────── */
+.cont-select {
+    padding: 0.5rem 0.9rem;
+    border: 1px solid var(--crema2);
+    background: var(--blanco);
+    font-family: inherit;
+    font-size: 0.88rem;
+    color: var(--cafe);
+    outline: none;
+    border-radius: 4px;
+    min-width: 240px;
+    cursor: pointer;
+    transition: border-color 0.2s;
+}
+
+.cont-select:focus { border-color: var(--rojo); }
+
+/* ── KPIs Resumen ────────────────────────────────────────────── */
+.kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1rem;
+    margin-bottom: 1.8rem;
+}
+
+.kpi-card {
+    background: var(--blanco);
+    padding: 1.4rem 1.6rem;
+    border-top: 3px solid var(--rojo);
+    box-shadow: 0 2px 8px rgba(67,40,24,0.06);
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+}
+
+.kpi-ganancia { border-top-color: #2E7D32; }
+
+.kpi-num {
+    font-family: Georgia, serif;
+    font-size: 1.7rem;
+    font-weight: 700;
+    color: var(--cafe);
+    line-height: 1;
+}
+
+.kpi-lbl {
+    font-size: 0.68rem;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--cafe2);
+}
+
+/* ── Formulario venta externa ────────────────────────────────── */
+.venta-ext-form {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr 2fr;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+/* ── Gráficas ────────────────────────────────────────────────── */
+.graficas-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 1.2rem;
+    margin-bottom: 0;
+}
+
+.grafica-card {
+    background: var(--blanco);
+    border: 1px solid var(--crema);
+    padding: 1.4rem;
+    box-shadow: 0 2px 8px rgba(67,40,24,0.05);
+}
+
+.grafica-titulo {
+    font-family: Georgia, serif;
+    font-size: 0.88rem;
+    color: var(--cafe2);
+    letter-spacing: 0.5px;
+    margin-bottom: 1rem;
+}
+
+/* ── Responsive ──────────────────────────────────────────────── */
+@media (max-width: 1024px) {
+    .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+    .graficas-grid { grid-template-columns: 1fr; }
+    .venta-ext-form { grid-template-columns: 1fr 1fr; }
+}
+
+@media (max-width: 600px) {
+    .kpi-grid { grid-template-columns: 1fr 1fr; }
+    .lista-header { display: none; }
+    .lista-fila { grid-template-columns: 1fr 1fr 36px; }
+    .lista-fila .insumo-cantidad { display: none; }
+    .venta-ext-form { grid-template-columns: 1fr; }
+    .cont-precio-wrap { flex-direction: column; }
+}

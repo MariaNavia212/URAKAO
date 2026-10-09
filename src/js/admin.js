@@ -109,9 +109,10 @@ document.querySelectorAll(".tab-btn").forEach(btn => {
         document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
         btn.classList.add("active");
         const tab = btn.dataset.tab;
-        document.getElementById("tab-pedidos").classList.toggle("hidden",   tab !== "pedidos");
-        document.getElementById("tab-productos").classList.toggle("hidden", tab !== "productos");
-        document.getElementById("tab-resenas").classList.toggle("hidden",   tab !== "resenas");
+        document.getElementById("tab-pedidos").classList.toggle("hidden",       tab !== "pedidos");
+        document.getElementById("tab-productos").classList.toggle("hidden",     tab !== "productos");
+        document.getElementById("tab-resenas").classList.toggle("hidden",       tab !== "resenas");
+        document.getElementById("tab-contabilidad").classList.toggle("hidden",  tab !== "contabilidad");
     });
 });
 

@@ -23,5 +23,15 @@ service cloud.firestore {
       allow read: if true;
       allow write: if request.auth != null;
     }
+
+    // Costeos de productos: solo autenticados
+    match /costeos/{costeoId} {
+      allow read, write: if request.auth != null;
+    }
+
+    // Ventas externas: solo autenticados
+    match /ventas_externas/{ventaId} {
+      allow read, write: if request.auth != null;
+    }
   }
 }
